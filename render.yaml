@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: capcut-opus-server
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
+    envVars:
+      - key: PORT
+        value: 5000
