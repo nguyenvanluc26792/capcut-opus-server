@@ -1,0 +1,17 @@
+{
+  "version": "v1.6.219",
+  "version_name": "v1.6.219",
+  "build": 400,
+  "version_code": 400,
+  "versionCode": 400,
+  "url": "/static/ota_update.zip",
+  "download_url": "/static/ota_update.zip",
+  "sha256": "d72b62c9e92840c10a30e7cff7a63e6be057ef5a994f179f3c69b807765133c7",
+  "size": 377350,
+  "force": true,
+  "changelog": [
+    "Tích hợp Server CapCut Online 24/7 (OPUS 48kHz không cần bật PC)",
+    "Gộp câu dẫn truyện thông minh (<= 220 ký tự) tăng mạnh độ diễn cảm và độ mượt liên câu",
+    "Tối ưu phân vai đa giọng chuẩn xác: Nhỏ Ngọt Ngào, Nam Trầm Ấm, Review Phim"
+  ]
+}

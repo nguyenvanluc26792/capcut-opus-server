@@ -112,6 +112,20 @@ def convert_to_opus_48k(audio_bytes):
 def health_check():
     return jsonify({"status": "ok", "service": "CapCut OPUS 48kHz Online Server 24/7"})
 
+@app.route("/api/ota/version", methods=["GET"])
+def ota_version():
+    manifest_path = BASE_DIR / "static" / "ota_manifest.json"
+    if manifest_path.exists():
+        return Response(manifest_path.read_text(encoding="utf-8"), mimetype="application/json")
+    return jsonify({"error": "Manifest not found"}), 404
+
+@app.route("/static/<path:filename>", methods=["GET"])
+def serve_static(filename):
+    static_file = BASE_DIR / "static" / filename
+    if static_file.exists():
+        return send_file(static_file)
+    return jsonify({"error": "File not found"}), 404
+
 @app.route("/api/tts", methods=["POST", "OPTIONS"])
 def api_tts():
     if request.method == "OPTIONS":
