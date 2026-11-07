@@ -67,6 +67,22 @@ def generate_capcut_audio(text, voice_id):
     raise last_err or Exception("Failed to generate CapCut audio after 3 attempts")
 
 def convert_to_opus_48k(audio_bytes):
+    # Cách 1: Dùng ffmpeg (siêu nhanh, chuẩn xác tuyệt đối 48kHz OPUS, nhẹ CPU)
+    try:
+        import subprocess
+        proc = subprocess.Popen(
+            ["ffmpeg", "-y", "-i", "pipe:0", "-ar", "48000", "-c:a", "libopus", "-b:a", "48k", "-f", "ogg", "pipe:1"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        out, _ = proc.communicate(input=audio_bytes, timeout=10)
+        if proc.returncode == 0 and len(out) > 300:
+            return out
+    except Exception as e:
+        pass
+
+    # Cách 2: Dùng soundfile & scipy (dự phòng)
     try:
         import soundfile as sf
         import numpy as np
