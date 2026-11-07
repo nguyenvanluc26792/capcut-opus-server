@@ -1,0 +1,17 @@
+{
+  "version": "v1.6.220",
+  "version_name": "v1.6.220",
+  "build": 401,
+  "version_code": 401,
+  "versionCode": 401,
+  "url": "/static/ota_update.zip",
+  "download_url": "/static/ota_update.zip",
+  "sha256": "bc3911bdc2b8c75fe03fe6b2f03f187bfc8e2c1fe2c9483ddb0a3388b606f89c",
+  "size": 376392,
+  "force": true,
+  "changelog": [
+    "Xóa bỏ hoàn toàn nhóm giọng VieNeu offline",
+    "Thêm danh mục riêng 11 Giọng CapCut AI (OPUS 48kHz Online 24/7)",
+    "Tối ưu phân vai đa giọng chuẩn xác: Nhỏ Ngọt Ngào, Nam Trầm Ấm, Review Phim"
+  ]
+}
