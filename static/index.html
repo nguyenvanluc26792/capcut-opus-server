@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 405 -->
-<!-- CURRENT_APP_VERSION = v1.6.222 -->
+<!-- CURRENT_APP_BUILD = 406 -->
+<!-- CURRENT_APP_VERSION = v1.6.223 -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.222';
-    var CURRENT_APP_BUILD = 405;
+    var CURRENT_APP_VERSION = 'v1.6.223';
+    var CURRENT_APP_BUILD = 406;
     let bookData = null;
     let currentChapterIndex = 0;
     let currentParagraphIndex = 0;
@@ -17754,11 +17754,12 @@ body.zen-mode #nrFabAdd {
     // ==========================================
     // OTA UPDATE ENGINE (Hỗ trợ 3G / 4G / Wi-Fi toàn cầu & Kiểm tra phiên bản)
     // ==========================================
-    const DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
-    const CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
-    const DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.222';
-    var CURRENT_APP_BUILD = 405;
+    // Cấu hình máy chủ cập nhật (đã khai báo ở đầu script)
+    DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
+    CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
+    DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
+    CURRENT_APP_VERSION = 'v1.6.223';
+    CURRENT_APP_BUILD = 406;
 
     async function autoSilentOtaCheck() {
       try {

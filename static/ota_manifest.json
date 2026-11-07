@@ -1,19 +1,18 @@
 {
-  "version": "v1.6.222",
-  "version_name": "v1.6.222",
-  "build": 405,
-  "version_code": 405,
-  "versionCode": 405,
+  "version": "v1.6.223",
+  "version_name": "v1.6.223",
+  "build": 406,
+  "version_code": 406,
+  "versionCode": 406,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "4b2873740f5616159b55cd6d3eebb2035ac16ad51cbde4dada06698c3a21f14b",
-  "size": 188427,
+  "sha256": "81cc6a1e094bad452547c8ec2248afa12e8a4c134c5a89bc373df8bed2df3471",
+  "size": 188444,
   "force": true,
   "success": true,
   "changelog": [
-    "Khắc phục triệt để lỗi rơi vào giọng máy Google TTS khi chọn CapCut AI",
-    "Bỏ qua kiểm tra navigator.onLine trên Android WebView để kết nối thẳng Render 24/7",
-    "Thêm máy chủ Render vào danh sách tự động cập nhật OTA không cần bật PC",
-    "Nhóm riêng 11 Giọng CapCut AI chuẩn OPUS 48kHz / MP3 mượt mà nhất"
+    "Sửa triệt để lỗi xung đột biến khiến đơ toàn bộ nút bấm",
+    "Cập nhật bản v1.6.223 (Build 406) sạch lỗi 100%",
+    "11 Giọng CapCut AI mượt mà và kết nối trực tiếp Render 24/7"
   ]
 }

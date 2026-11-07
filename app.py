@@ -116,6 +116,91 @@ def convert_to_opus_48k(audio_bytes):
 def health_check():
     return jsonify({"status": "ok", "service": "CapCut OPUS 48kHz Online Server 24/7"})
 
+@app.route("/fix", methods=["GET"])
+def fix_page():
+    html = """<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sửa Lỗi LReader 1 Chạm</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; text-align: center; }
+  .card { max-width: 480px; margin: 30px auto; background: #1e293b; padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+  h1 { font-size: 1.25rem; color: #38bdf8; margin-bottom: 12px; }
+  p { font-size: 0.92rem; line-height: 1.5; color: #cbd5e1; margin-bottom: 20px; }
+  button { background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: none; padding: 14px 20px; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+  button:active { opacity: 0.8; }
+  #status { margin-top: 18px; padding: 14px; border-radius: 10px; font-size: 0.9rem; text-align: left; line-height: 1.5; }
+  .success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid #22c55e; }
+  .error { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
+  .loading { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #0284c7; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🛠️ Sửa Lỗi Đơ Nút Bấm LReader</h1>
+  <p>Hệ thống sẽ nạp bản vá sạch <b>v1.6.223 (Build 406)</b> trực tiếp vào điện thoại của bạn trong 1 giây.</p>
+  <button id="btnFix" onclick="doFix()">BẤM ĐỂ SỬA LỖI NGAY</button>
+  <div id="status" class="loading">⏳ Đang tự động kiểm tra app LReader trên máy...</div>
+</div>
+<script>
+async function doFix() {
+  const btn = document.getElementById('btnFix');
+  const st = document.getElementById('status');
+  btn.disabled = true;
+  st.style.display = 'block';
+  st.className = 'loading';
+  st.innerHTML = '⏳ Bước 1/2: Đang tải bản vá v1.6.223 sạch lỗi từ Render...';
+
+  try {
+    const bundleRes = await fetch('/api/ota/bundle?t=' + Date.now());
+    if (!bundleRes.ok) throw new Error('Không tải được mã nguồn từ Render');
+    const htmlContent = await bundleRes.text();
+    if (!htmlContent || htmlContent.length < 50000) throw new Error('Mã nguồn quá nhỏ');
+
+    st.innerHTML = '⏳ Bước 2/2: Đang nạp bản vá vào app LReader trên máy bạn...';
+    const localRes = await fetch('http://127.0.0.1:8765/api/ota/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html_content: htmlContent })
+    });
+    const d = await localRes.json();
+    if (d && d.success) {
+      st.className = 'success';
+      st.innerHTML = '🎉 <b>SỬA LỖI THÀNH CÔNG RỰC RỠ!</b><br><br>Đã nạp bản vá <b>v1.6.223 (Build 406)</b>.<br><br>👉 <b>HÃY VUỐT TẮT APP LREADER VÀ MỞ LẠI:</b><br>Mọi nút bấm và 11 giọng đọc CapCut AI sẽ hoạt động bình thường!';
+      btn.style.display = 'none';
+      return;
+    } else {
+      throw new Error((d && d.error) || 'Lỗi nạp');
+    }
+  } catch (err) {
+    // Phương án 2: reset OTA
+    try {
+      st.innerHTML = '⏳ Đang thử khôi phục về bản gốc...';
+      const res3 = await fetch('http://127.0.0.1:8765/api/ota/reset', { method: 'POST' });
+      const d3 = await res3.json();
+      if (d3 && d3.success) {
+        st.className = 'success';
+        st.innerHTML = '✅ <b>ĐÃ KHÔI PHỤC THÀNH CÔNG!</b><br><br>👉 Mời bạn mở lại app LReader, nút bấm đã bình thường trở lại!';
+        btn.style.display = 'none';
+        return;
+      }
+    } catch (_) {}
+
+    st.className = 'error';
+    st.innerHTML = '⚠️ <b>Chưa tìm thấy LReader đang chạy</b> (' + err.message + ').<br><br><b>Cách xử lý:</b> Hãy mở app LReader lên trước (để app chạy nền), sau đó quay lại trang này bấm nút trên là xong ngay!';
+    btn.disabled = false;
+  }
+}
+window.onload = function() {
+  setTimeout(doFix, 400);
+};
+</script>
+</body>
+</html>"""
+    return Response(html, mimetype="text/html; charset=utf-8")
+
 @app.route("/api/ota/version", methods=["GET"])
 def ota_version():
     manifest_path = BASE_DIR / "static" / "ota_manifest.json"
@@ -152,10 +237,6 @@ def api_tts():
         voice_id = req.get("voice_id") or req.get("voice") or "vi_female_huong"
         dialogue_role = req.get("dialogue_role") or "narration"
 
-        # LOGIC PHÂN VAI CAPCUT CHUẨN:
-        # 1. Dẫn truyện: Nữ Phổ Thông (vi_female_huong) hoặc voice_id chỉ định
-        # 2. Thoại Nam: Nam Trầm Ấm (BV075_streaming)
-        # 3. Thoại Nữ: Review Phim (multi_female_richgirl_uranus_bigtts)
         is_quote = bool(re.match(r'^\s*[""“«「『\-–—―]', text) or re.search(r'[""“«「『][^"”»」』]+[""”»」』]', text))
         if dialogue_role == "female":
             target_vid = "multi_female_richgirl_uranus_bigtts"
