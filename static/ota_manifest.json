@@ -1,17 +1,19 @@
 {
-  "version": "v1.6.220",
-  "version_name": "v1.6.220",
-  "build": 401,
-  "version_code": 401,
-  "versionCode": 401,
+  "version": "v1.6.222",
+  "version_name": "v1.6.222",
+  "build": 405,
+  "version_code": 405,
+  "versionCode": 405,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "968102132ee7a17393510b3004003550068f717ac5c86b7f48501f5c4015cabc",
-  "size": 376392,
+  "sha256": "4b2873740f5616159b55cd6d3eebb2035ac16ad51cbde4dada06698c3a21f14b",
+  "size": 188427,
   "force": true,
+  "success": true,
   "changelog": [
-    "Xóa bỏ hoàn toàn nhóm giọng VieNeu offline",
-    "Thêm danh mục riêng 11 Giọng CapCut AI (OPUS 48kHz Online 24/7)",
-    "Tối ưu phân vai đa giọng chuẩn xác: Nhỏ Ngọt Ngào, Nam Trầm Ấm, Review Phim"
+    "Khắc phục triệt để lỗi rơi vào giọng máy Google TTS khi chọn CapCut AI",
+    "Bỏ qua kiểm tra navigator.onLine trên Android WebView để kết nối thẳng Render 24/7",
+    "Thêm máy chủ Render vào danh sách tự động cập nhật OTA không cần bật PC",
+    "Nhóm riêng 11 Giọng CapCut AI chuẩn OPUS 48kHz / MP3 mượt mà nhất"
   ]
 }

@@ -40,24 +40,28 @@ else:
 def generate_capcut_audio(text, voice_id):
     if 'doc_lo' not in _capcut_ns:
         raise Exception("CapCut module not initialized")
-    target_vid = voice_id
-    if 'dsp' in str(target_vid) or '421' in str(target_vid):
-        target_vid = 'vi_female_huong' if '421' in str(target_vid) else 'BV074_streaming'
+    target_vid = str(voice_id).replace("capcut_", "")
+    
+    # Chuẩn hóa voice id: các voice cũ không còn được ByteDance hỗ trợ trực tiếp -> map sang giọng chuẩn
+    if 'dsp' in target_vid or '421' in target_vid:
+        target_vid = 'vi_female_huong' if '421' in target_vid else 'BV074_streaming'
     
     clean_text = re.sub(r'[\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF\u2014\u2013-]*[,\uff0c\u3001\ufe50][\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF\u2014\u2013-]*(?:\u2026|\.{3})?', ', ', text)
     clean_text = re.sub(r' {2,}', ' ', clean_text).strip()
     
     last_err = None
+    # Thử gọi voice yêu cầu; nếu thất bại thì tự fallback sang BV074_streaming hoặc vi_female_huong
     for attempt in range(3):
         try:
             res = _capcut_ns['doc_lo']([clean_text], target_vid)
             if not res or not res[0]:
-                if target_vid != 'BV074_streaming':
-                    res = _capcut_ns['doc_lo']([clean_text], 'BV074_streaming')
+                fallback_vid = 'vi_female_huong' if 'female' in target_vid or '074' in target_vid else 'BV075_streaming'
+                if target_vid != fallback_vid:
+                    res = _capcut_ns['doc_lo']([clean_text], fallback_vid)
             if not res or not res[0]:
                 raise Exception("CapCut did not return audio URL")
             audio_url = res[0]
-            resp = requests.get(audio_url, timeout=12)
+            resp = requests.get(audio_url, timeout=15)
             resp.raise_for_status()
             if len(resp.content) > 300:
                 return resp.content
@@ -67,7 +71,7 @@ def generate_capcut_audio(text, voice_id):
     raise last_err or Exception("Failed to generate CapCut audio after 3 attempts")
 
 def convert_to_opus_48k(audio_bytes):
-    # Cách 1: Dùng ffmpeg (siêu nhanh, chuẩn xác tuyệt đối 48kHz OPUS, nhẹ CPU)
+    # Cách 1: Dùng ffmpeg (chuẩn 48kHz OPUS, nhẹ CPU)
     try:
         import subprocess
         proc = subprocess.Popen(
@@ -76,10 +80,10 @@ def convert_to_opus_48k(audio_bytes):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        out, _ = proc.communicate(input=audio_bytes, timeout=10)
+        out, _ = proc.communicate(input=audio_bytes, timeout=12)
         if proc.returncode == 0 and len(out) > 300:
             return out
-    except Exception as e:
+    except Exception:
         pass
 
     # Cách 2: Dùng soundfile & scipy (dự phòng)
@@ -119,6 +123,14 @@ def ota_version():
         return Response(manifest_path.read_text(encoding="utf-8"), mimetype="application/json")
     return jsonify({"error": "Manifest not found"}), 404
 
+@app.route("/api/ota/bundle", methods=["GET"])
+@app.route("/api/ota/index.html", methods=["GET"])
+def ota_bundle():
+    bundle_path = BASE_DIR / "static" / "index.html"
+    if bundle_path.exists():
+        return send_file(bundle_path, mimetype="text/html; charset=utf-8")
+    return jsonify({"error": "Bundle not found"}), 404
+
 @app.route("/static/<path:filename>", methods=["GET"])
 def serve_static(filename):
     static_file = BASE_DIR / "static" / filename
@@ -137,11 +149,11 @@ def api_tts():
         if not text:
             return jsonify({"error": "Empty text"}), 400
 
-        voice_id = req.get("voice_id") or req.get("voice") or "BV421_vivn_streaming"
+        voice_id = req.get("voice_id") or req.get("voice") or "vi_female_huong"
         dialogue_role = req.get("dialogue_role") or "narration"
 
         # LOGIC PHÂN VAI CAPCUT CHUẨN:
-        # 1. Dẫn truyện: Nhỏ Ngọt Ngào (BV421_vivn_streaming) / Nữ Phổ Thông (vi_female_huong)
+        # 1. Dẫn truyện: Nữ Phổ Thông (vi_female_huong) hoặc voice_id chỉ định
         # 2. Thoại Nam: Nam Trầm Ấm (BV075_streaming)
         # 3. Thoại Nữ: Review Phim (multi_female_richgirl_uranus_bigtts)
         is_quote = bool(re.match(r'^\s*[""“«「『\-–—―]', text) or re.search(r'[""“«「『][^"”»」』]+[""”»」』]', text))
@@ -155,6 +167,14 @@ def api_tts():
         # Sinh âm thanh từ CapCut
         raw_mp3 = generate_capcut_audio(text, target_vid)
         
+        req_fmt = (req.get("format") or request.args.get("format") or "opus").lower()
+        if req_fmt == "mp3":
+            return send_file(
+                io.BytesIO(raw_mp3),
+                mimetype="audio/mpeg",
+                as_attachment=False
+            )
+
         # Nén thời gian thực sang chuẩn OPUS 48kHz
         opus_data = convert_to_opus_48k(raw_mp3)
 
