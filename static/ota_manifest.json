@@ -6,7 +6,7 @@
   "versionCode": 401,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "bc3911bdc2b8c75fe03fe6b2f03f187bfc8e2c1fe2c9483ddb0a3388b606f89c",
+  "sha256": "968102132ee7a17393510b3004003550068f717ac5c86b7f48501f5c4015cabc",
   "size": 376392,
   "force": true,
   "changelog": [
