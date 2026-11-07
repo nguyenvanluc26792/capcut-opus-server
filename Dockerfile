@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
-# Cài đặt thư viện libsndfile để hỗ trợ nén OPUS 48kHz
+# Cài đặt thư viện libsndfile và ffmpeg để hỗ trợ nén OPUS 48kHz
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsndfile1 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -15,4 +16,4 @@ COPY . .
 ENV PORT=5000
 EXPOSE 5000
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["sh", "-c", "gunicorn -w 2 -b 0.0.0.0:${PORT:-5000} app:app"]
