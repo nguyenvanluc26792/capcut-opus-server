@@ -1,4 +1,4 @@
-<!-- CURRENT_APP_BUILD = 415 -->
+<!-- CURRENT_APP_BUILD = 416 -->
 <!-- CURRENT_APP_VERSION = 'v1.6.228' -->
 <!DOCTYPE html>
 <html lang="vi">
@@ -4271,7 +4271,7 @@ body.zen-mode #nrFabAdd {
         📖 Đọc Tràn Viền
       </button>
       <button class="btn btn-popover-item" onclick="switchNrTab('settings'); closeMobileMenu();" style="grid-column: span 2; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; font-weight: 700; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);">
-        ⚡ Cài đặt &amp; Kiểm tra cập nhật OTA (v1.6.201)
+        ⚡ Cài đặt &amp; Kiểm tra cập nhật OTA (v1.6.228)
       </button>
       <button class="btn btn-popover-item" onclick="triggerAppReload(); closeMobileMenu();" style="grid-column: span 2; background: rgba(255,255,255,0.06); color: #cbd5e1; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; gap: 8px;">
         🔄 Tải Lại / Làm Mới Trang (Reload)
@@ -5758,7 +5758,7 @@ body.zen-mode #nrFabAdd {
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
     var CURRENT_APP_VERSION = 'v1.6.228';
-    var CURRENT_APP_BUILD = 415;
+    var CURRENT_APP_BUILD = 416;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -8204,32 +8204,131 @@ body.zen-mode #nrFabAdd {
       renderOfflineVoicesList();
     }
 
-    function playOfflineVoiceDemo(voiceId) {
+    async function playOfflineVoiceDemo(voiceId) {
       if (playingDemoVoiceId === voiceId && !demoAudioPlayer.paused) {
         demoAudioPlayer.pause();
         playingDemoVoiceId = null;
         renderOfflineVoicesList();
+        renderCustomVoicePickerList();
         return;
       }
 
       demoAudioPlayer.pause();
       playingDemoVoiceId = voiceId;
+      renderOfflineVoicesList();
+      renderCustomVoicePickerList();
+
+      const provider = getProviderForVoiceId(voiceId);
+      const isOnlineVoice = (provider === 'capcut' || provider === 'voicestudio' || provider === 'edge' || String(voiceId).startsWith('BV') || String(voiceId).includes('bigtts') || String(voiceId).startsWith('vi_female'));
+
+      if (isOnlineVoice) {
+        showToast('🔊 Đang kết nối tải giọng nghe thử...');
+        const demoSampleTexts = {
+          'BV421_vivn_streaming': 'Xin chào bạn, mình là Nhỏ Ngọt Ngào, rất vui được đọc truyện cùng bạn.',
+          'BV075_streaming': 'Xin chào các đạo hữu, ta là Nam Trầm Ấm, chuyên đọc truyện tiên hiệp kiếm hiệp.',
+          'multi_female_richgirl_uranus_bigtts': 'Xin chào các bạn, đây là giọng đọc Review Phim siêu diễn cảm và tự nhiên.',
+          'BV074_streaming': 'Chào bạn nhé! Mình là Cô Gái Hoạt Ngôn, tươi vui và hoạt bát.',
+          'vi_female_huong': 'Kính chào quý thính giả, đây là giọng Nữ Phổ Thông phát thanh viên chuẩn Bắc.',
+          'BV560_streaming': 'Xin chào bạn, tôi là Nam Thanh Niên, hiện đại và tự nhiên.',
+          'BV562_streaming': 'Chào bạn yêu dấu, mình là Nữ Ngọt Ngào, dịu dàng và tình cảm.',
+          'multi_female_tianmeijieshuo_uranus_bigtts': 'Xin chào bạn, đây là giọng Nữ Thuyết Minh sâu lắng và truyền cảm.',
+          'multi_female_yangguangnv_uranus_bigtts': 'Chào bạn nhé! Mình là Nữ Năng Động, tràn đầy năng lượng tươi sáng.',
+          'multi_female_kiwi_uranus_bigtts': 'Xin chào bạn, mình là Nữ Kiwi đáng yêu và nhẹ nhàng.',
+          'BV074_streaming_dsp': 'Dạ con chào cô chú, con là giọng bé con hồn nhiên đây ạ!',
+          'voicestudio_alloy': 'Xin chào, đây là giọng dẫn chuyện truyền cảm trên hệ thống.',
+          'voicestudio_onyx': 'Xin chào, đây là giọng nam trầm hùng mạnh mẽ của Voice Studio.',
+          'voicestudio_shimmer': 'Xin chào bạn, đây là giọng nữ dịu dàng êm ái của Voice Studio.'
+        };
+        const sampleText = demoSampleTexts[voiceId] || 'Xin chào bạn, đây là giọng đọc thử nghiệm trên hệ thống.';
+
+        const onlineServers = [];
+        if (typeof CAPCUT_ONLINE_SERVER_URL !== 'undefined' && CAPCUT_ONLINE_SERVER_URL) onlineServers.push(CAPCUT_ONLINE_SERVER_URL.replace(/\/+$/, ''));
+        if (typeof DEFAULT_OTA_3G_URL !== 'undefined' && DEFAULT_OTA_3G_URL && !onlineServers.includes(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''))) onlineServers.push(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''));
+        if (typeof DEFAULT_OTA_WIFI_URL !== 'undefined' && DEFAULT_OTA_WIFI_URL && !onlineServers.includes(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''))) onlineServers.push(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''));
+        onlineServers.push(''); // fallback local
+
+        let audioBlob = null;
+        for (const srv of onlineServers) {
+          try {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 6000);
+            const targetUrl = (srv ? srv : '') + '/api/tts';
+            const res = await fetch(targetUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json; charset=utf-8' },
+              body: JSON.stringify({
+                text: sampleText,
+                voice_id: voiceId,
+                provider: provider,
+                speed: 1.0,
+                format: 'mp3'
+              }),
+              signal: ctrl.signal
+            });
+            clearTimeout(tid);
+            if (res.ok) {
+              const b = await res.blob();
+              if (b && b.size >= 500) {
+                audioBlob = b;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (audioBlob && playingDemoVoiceId === voiceId) {
+          try {
+            const blobUrl = URL.createObjectURL(audioBlob);
+            demoAudioPlayer.src = blobUrl;
+            demoAudioPlayer.onended = () => {
+              playingDemoVoiceId = null;
+              renderOfflineVoicesList();
+              renderCustomVoicePickerList();
+            };
+            demoAudioPlayer.onerror = () => {
+              playingDemoVoiceId = null;
+              renderOfflineVoicesList();
+              renderCustomVoicePickerList();
+            };
+            await demoAudioPlayer.play();
+            showToast('🔊 Đang phát giọng nghe thử...');
+          } catch (e) {
+            console.error('Play online demo error:', e);
+            showToast('⚠️ Không thể phát âm thanh demo');
+            playingDemoVoiceId = null;
+            renderOfflineVoicesList();
+            renderCustomVoicePickerList();
+          }
+        } else if (playingDemoVoiceId === voiceId) {
+          showToast('⚠️ Không tải được giọng nghe thử');
+          playingDemoVoiceId = null;
+          renderOfflineVoicesList();
+          renderCustomVoicePickerList();
+        }
+        return;
+      }
+
+      // Offline voice demo
       demoAudioPlayer.src = `/api/offline_voices/demo/${encodeURIComponent(voiceId)}?t=${Date.now()}`;
       demoAudioPlayer.play().catch(e => {
         console.error('Play demo error:', e);
         showToast('⚠️ Không thể phát âm thanh demo');
         playingDemoVoiceId = null;
         renderOfflineVoicesList();
+        renderCustomVoicePickerList();
       });
       renderOfflineVoicesList();
+      renderCustomVoicePickerList();
 
       demoAudioPlayer.onended = () => {
         playingDemoVoiceId = null;
         renderOfflineVoicesList();
+        renderCustomVoicePickerList();
       };
       demoAudioPlayer.onerror = () => {
         playingDemoVoiceId = null;
         renderOfflineVoicesList();
+        renderCustomVoicePickerList();
       };
     }
 
@@ -14122,7 +14221,7 @@ body.zen-mode #nrFabAdd {
     function isKnownFemaleVoice(vId) {
       if (!vId) return false;
       const s = String(vId).toLowerCase();
-      if (s.includes('female') || s.includes('richgirl') || s.includes('banmai') || s.includes('huong') || s.includes('thao_vy')) return true;
+      if (s.includes('female') || s.includes('richgirl') || s.includes('banmai') || s.includes('huong') || s.includes('thao_vy') || s.includes('bv421') || s.includes('bv074') || s.includes('bv562') || s.includes('kiwi') || s.includes('tianmei') || s.includes('yangguang')) return true;
       if (s.includes('ngochuyen') || s.includes('calmwoman') || s.includes('maiphuong') || s.includes('ngocngan') || s.includes('phuongtrang') || s.includes('thanhphuong')) return true;
       if (s.includes('mailinh') || s.includes('diemtrinh') || s.includes('kim_cuc') || s.includes('kimcuc') || s.includes('kim_tuyen') || s.includes('bich_giao') || s.includes('ba_lao') || s.includes('be_gai') || s.includes('thu_ha') || s.includes('yen_nhi') || s.includes('ngoc_lan') || s.includes('minh_anh') || s.includes('mai_loan')) return true;
       if (s.startsWith('offline_kokoro:')) {
@@ -14141,7 +14240,7 @@ body.zen-mode #nrFabAdd {
     function isKnownMaleVoice(vId) {
       if (!vId) return false;
       const s = String(vId).toLowerCase();
-      if (s.includes('bv075') || s.includes('minhquang') || s.includes('manhdung') || s.includes('quanghuy') || s.includes('hungthinh') || s.includes('thanhdat') || s.includes('tuanngoc') || s.includes('phattai') || s.includes('ong_lao') || s.includes('be_trai') || s.includes('deepman') || s.includes('thai_son') || s.includes('hai_dang') || s.includes('adam')) return true;
+      if (s.includes('bv075') || s.includes('bv560') || s.includes('minhquang') || s.includes('manhdung') || s.includes('quanghuy') || s.includes('hungthinh') || s.includes('thanhdat') || s.includes('tuanngoc') || s.includes('phattai') || s.includes('ong_lao') || s.includes('be_trai') || s.includes('deepman') || s.includes('thai_son') || s.includes('hai_dang') || s.includes('adam')) return true;
       if (s.startsWith('offline_kokoro:')) {
         const sid = parseInt(s.split(':').pop(), 10);
         // Kokoro Nam: 2 (Mạnh Dũng), 4 (Hùng Thịnh), 5 (Thành Đạt), 6 (Tuấn Ngọc), 7 (Phát Tài), 8 (Ông lão), 10 (Bé trai)
@@ -17749,7 +17848,7 @@ body.zen-mode #nrFabAdd {
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
     CURRENT_APP_VERSION = 'v1.6.228';
-    CURRENT_APP_BUILD = 415;
+    CURRENT_APP_BUILD = 416;
 
     async function autoSilentOtaCheck() {
       try {

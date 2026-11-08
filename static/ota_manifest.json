@@ -1,19 +1,14 @@
 {
   "version": "v1.6.228",
   "version_name": "v1.6.228",
-  "build": 415,
-  "version_code": 415,
-  "versionCode": 415,
+  "build": 416,
+  "version_code": 416,
+  "versionCode": 416,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "507aad83a4f73b1ad19aaecd8a4988c5f2c30c41ceace0006d9292dcbcdbffa6",
-  "size": 188880,
+  "sha256": "6ab4f3759693b86ed2bd790bc2b8b38f8246ac2b2dc14c855950f9961f631840",
+  "size": 880106,
   "force": true,
   "success": true,
-  "changelog": [
-    "Đua tốc độ đa máy chủ song song (Render + Cloudflare + Wi-Fi) phát ngay lập tức không trễ",
-    "Khóa triệt để 100% không cho local APK fallback sang Google TTS khi chọn CapCut AI",
-    "Tự động chọn server online nhanh nhất có âm thanh trong 0.5s",
-    "Đã sửa chuẩn toàn bộ giao diện không bị vỡ bố cục"
-  ]
+  "changelog": "Bản 416: Hỗ trợ nút [Thử] nghe demo tức thời cho toàn bộ 11 giọng CapCut AI và VoiceStudio. Phát chuẩn MP3 trực tiếp siêu mượt, chặn 100% Google TTS fallback."
 }

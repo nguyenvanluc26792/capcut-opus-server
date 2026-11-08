@@ -258,6 +258,16 @@ def api_tts():
         print(f"[TTS Error]: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/api/offline_voices/demo/<voice_id>", methods=["GET"])
+def get_offline_voice_demo(voice_id):
+    try:
+        sample_text = "Xin chào bạn, đây là giọng đọc thử nghiệm trên hệ thống."
+        raw_mp3 = generate_capcut_audio(sample_text, voice_id)
+        return send_file(io.BytesIO(raw_mp3), mimetype="audio/mpeg")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
