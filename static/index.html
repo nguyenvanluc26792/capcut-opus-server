@@ -1,4 +1,4 @@
-<!-- CURRENT_APP_BUILD = 416 -->
+<!-- CURRENT_APP_BUILD = 417 -->
 <!-- CURRENT_APP_VERSION = 'v1.6.228' -->
 <!DOCTYPE html>
 <html lang="vi">
@@ -5758,7 +5758,7 @@ body.zen-mode #nrFabAdd {
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
     var CURRENT_APP_VERSION = 'v1.6.228';
-    var CURRENT_APP_BUILD = 416;
+    var CURRENT_APP_BUILD = 417;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -14074,12 +14074,10 @@ body.zen-mode #nrFabAdd {
     function getVerifiedCapCutVoiceForId(vId) {
       if (!vId) return 'BV074_streaming';
       const s = String(vId).toLowerCase();
-      if (s.includes('dsp')) {
-        return s.includes('075') ? 'BV075_streaming' : 'BV074_streaming';
+      // BẢO TỒN NGUYÊN BẢN 100% CÁC GIỌNG CAPCUT AI CHÍNH GỐC
+      if (s.startsWith('bv') || s.startsWith('multi_') || s.startsWith('vi_female')) {
+        return vId;
       }
-      if (s.includes('bv421') || s.includes('vi_female_huong') || s.includes('maiphuong')) return 'vi_female_huong';
-      if (s.includes('thao_vy') || s.includes('bv074')) return 'BV074_streaming';
-      if (s.includes('minhquang') || s.includes('bv075')) return 'BV075_streaming';
       if (s.startsWith('offline_')) {
         if (s.includes(':2') || s.includes(':4') || s.includes(':5') || s.includes(':6') || s.includes(':7') || s.includes('manhdung') || s.includes('deepman') || s.includes('quanghuy') || s.includes('hungthinh') || s.includes('thanhdat') || s.includes('tuanngoc') || s.includes('phattai')) {
           return 'BV075_streaming';
@@ -17848,7 +17846,7 @@ body.zen-mode #nrFabAdd {
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
     CURRENT_APP_VERSION = 'v1.6.228';
-    CURRENT_APP_BUILD = 416;
+    CURRENT_APP_BUILD = 417;
 
     async function autoSilentOtaCheck() {
       try {

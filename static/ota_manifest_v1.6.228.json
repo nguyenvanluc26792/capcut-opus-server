@@ -1,14 +1,14 @@
 {
   "version": "v1.6.228",
   "version_name": "v1.6.228",
-  "build": 416,
-  "version_code": 416,
-  "versionCode": 416,
+  "build": 417,
+  "version_code": 417,
+  "versionCode": 417,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "6ab4f3759693b86ed2bd790bc2b8b38f8246ac2b2dc14c855950f9961f631840",
-  "size": 880106,
+  "sha256": "3aa1313e7bf7d25bcecfe408c604e90f0b241e10c9d73b80b1ab5fa177d27227",
+  "size": 879899,
   "force": true,
   "success": true,
-  "changelog": "Bản 416: Hỗ trợ nút [Thử] nghe demo tức thời cho toàn bộ 11 giọng CapCut AI và VoiceStudio. Phát chuẩn MP3 trực tiếp siêu mượt, chặn 100% Google TTS fallback."
+  "changelog": "Bản 417: Khắc phục triệt để lỗi ép giọng CapCut. Từng giọng trong 11 giọng AI (Nữ Kiwi, Nhỏ Ngọt Ngào, Nam Trầm Ấm, Review Phim, Giọng Bé...) đều đọc chuẩn 100% âm sắc riêng biệt chính gốc của ByteDance, không còn bị ép đọc chung một kiểu."
 }

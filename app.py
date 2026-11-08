@@ -31,43 +31,76 @@ if CAPCUT_MODULE_PATH.exists():
     try:
         _code = marshal.loads(CAPCUT_MODULE_PATH.read_bytes())
         exec(_code, _capcut_ns)
-        print("[OK] CapCut TTS Module loaded successfully!")
+        # Vá lỗi platform: Các giọng BV, multi_, vi_ bắt buộc dùng platform sami để ByteDance không nhận nhầm thành 11labs
+        _orig_nt = _capcut_ns.get('_nen_tang_giong')
+        def _safe_nen_tang_giong(vt):
+            v_str = str(vt)
+            if v_str.startswith(('BV', 'multi_', 'vi_')):
+                return 'sami'
+            if _orig_nt:
+                return _orig_nt(vt)
+            return 'sami'
+        _capcut_ns['_nen_tang_giong'] = _safe_nen_tang_giong
+        print("[OK] CapCut TTS Module loaded successfully with safe platform patch!")
     except Exception as e:
         print(f"[ERROR] Failed to load decomp_tts_service.bin: {e}")
 else:
     print("[WARN] decomp_tts_service.bin not found!")
 
+CAPCUT_VOICE_MAP = {
+    "BV421_vivn_streaming": {"rid": "7252594014782755330", "name": "Nhỏ Ngọt Ngào"},
+    "BV075_streaming": {"rid": "7102355803792740865", "name": "Nam Trầm Ấm"},
+    "multi_female_richgirl_uranus_bigtts": {"rid": "7637460351541447956", "name": "Review Phim"},
+    "BV074_streaming": {"rid": "7102355709945188865", "name": "Cô Gái Hoạt Ngôn"},
+    "vi_female_huong": {"rid": "7264854897953083905", "name": "Nữ Phổ Thông"},
+    "BV560_streaming": {"rid": "7483736167565758992", "name": "Nam Thanh Niên"},
+    "BV562_streaming": {"rid": "7483736254694035984", "name": "Nữ Ngọt Ngào"},
+    "multi_female_tianmeijieshuo_uranus_bigtts": {"rid": "7637460417295469832", "name": "Nữ Thuyết Minh"},
+    "multi_female_yangguangnv_uranus_bigtts": {"rid": "7637456432522218773", "name": "Nữ Năng Động"},
+    "multi_female_kiwi_uranus_bigtts": {"rid": "7637457995882089749", "name": "Nữ Kiwi"},
+    "BV074_streaming_dsp": {"rid": "7550087831092251920", "name": "Giọng Bé"}
+}
+
 def generate_capcut_audio(text, voice_id):
     if 'doc_lo' not in _capcut_ns:
         raise Exception("CapCut module not initialized")
-    target_vid = str(voice_id).replace("capcut_", "")
+    target_vid = str(voice_id).replace("capcut_", "").strip()
     
-    # Chuẩn hóa voice id: các voice cũ không còn được ByteDance hỗ trợ trực tiếp -> map sang giọng chuẩn
-    if 'dsp' in target_vid or '421' in target_vid:
-        target_vid = 'vi_female_huong' if '421' in target_vid else 'BV074_streaming'
+    # Lấy chính xác resource_id (rid) để ByteDance trả về đúng âm sắc của từng giọng riêng biệt
+    voice_info = CAPCUT_VOICE_MAP.get(target_vid, {})
+    rid = voice_info.get("rid", "")
     
-    clean_text = re.sub(r'[\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF\u2014\u2013-]*[,\uff0c\u3001\ufe50][\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF\u2014\u2013-]*(?:\u2026|\.{3})?', ', ', text)
+    clean_text = re.sub(r'[\s   -     　﻿—–-]*[,，、﹐][\s   -     　﻿—–-]*(?:…|\.{3})?', ', ', text)
     clean_text = re.sub(r' {2,}', ' ', clean_text).strip()
     
     last_err = None
-    # Thử gọi voice yêu cầu; nếu thất bại thì tự fallback sang BV074_streaming hoặc vi_female_huong
     for attempt in range(3):
         try:
-            res = _capcut_ns['doc_lo']([clean_text], target_vid)
-            if not res or not res[0]:
-                fallback_vid = 'vi_female_huong' if 'female' in target_vid or '074' in target_vid else 'BV075_streaming'
-                if target_vid != fallback_vid:
-                    res = _capcut_ns['doc_lo']([clean_text], fallback_vid)
-            if not res or not res[0]:
-                raise Exception("CapCut did not return audio URL")
-            audio_url = res[0]
-            resp = requests.get(audio_url, timeout=15)
-            resp.raise_for_status()
-            if len(resp.content) > 300:
-                return resp.content
+            # GỌI CHÍNH XÁC VOICE_ID VÀ RESOURCE_ID ĐÃ ÁNH XẠ
+            res = _capcut_ns['doc_lo']([clean_text], target_vid, _rid=rid)
+            if res and res[0]:
+                audio_url = res[0]
+                resp = requests.get(audio_url, timeout=15)
+                resp.raise_for_status()
+                if len(resp.content) > 300:
+                    return resp.content
+            raise Exception(f"CapCut did not return audio URL for {target_vid}")
         except Exception as e:
             last_err = e
             time.sleep(0.2 * (attempt + 1))
+            
+    # Dự phòng thông minh chỉ khi giọng đó thực sự lỗi mạng
+    try:
+        fallback_vid = 'BV074_streaming' if 'female' in target_vid or '074' in target_vid else 'BV075_streaming'
+        fb_info = CAPCUT_VOICE_MAP.get(fallback_vid, {})
+        res = _capcut_ns['doc_lo']([clean_text], fallback_vid, _rid=fb_info.get("rid", ""))
+        if res and res[0]:
+            resp = requests.get(res[0], timeout=15)
+            if len(resp.content) > 300:
+                return resp.content
+    except Exception:
+        pass
+        
     raise last_err or Exception("Failed to generate CapCut audio after 3 attempts")
 
 def convert_to_opus_48k(audio_bytes):
@@ -225,15 +258,8 @@ def api_tts():
         dialogue_role = req.get("dialogue_role") or "narration"
 
         is_quote = bool(re.match(r'^\s*[""“«「『\-–—―]', text) or re.search(r'[""“«「『][^"”»」』]+[""”»」』]', text))
-        # Nếu người dùng đã chọn rõ voice_id (ví dụ: Nữ Kiwi, Nhỏ Ngọt Ngào, Nữ Phổ Thông...), tôn trọng 100% lựa chọn
-        if voice_id and voice_id not in ["vi_female_huong", "BV075_streaming"]:
-            target_vid = voice_id
-        elif dialogue_role == "female":
-            target_vid = "multi_female_richgirl_uranus_bigtts"
-        elif dialogue_role == "male" or (is_quote and dialogue_role != "narration"):
-            target_vid = "BV075_streaming"
-        else:
-            target_vid = voice_id
+        # Tôn trọng 100% giọng đọc người dùng đã chọn, không ép sang giọng khác
+        target_vid = voice_id if voice_id else "BV074_streaming"
 
         # Sinh âm thanh từ CapCut
         raw_mp3 = generate_capcut_audio(text, target_vid)
