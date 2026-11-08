@@ -77,7 +77,7 @@ def generate_capcut_audio(text, voice_id):
     for attempt in range(3):
         try:
             # GỌI CHÍNH XÁC VOICE_ID VÀ RESOURCE_ID ĐÃ ÁNH XẠ
-            res = _capcut_ns['doc_lo']([clean_text], target_vid, _rid=rid)
+            res = _capcut_ns['doc_lo']([clean_text], target_vid, _vt=target_vid, _rid=rid)
             if res and res[0]:
                 audio_url = res[0]
                 resp = requests.get(audio_url, timeout=15)
@@ -93,7 +93,7 @@ def generate_capcut_audio(text, voice_id):
     try:
         fallback_vid = 'BV074_streaming' if 'female' in target_vid or '074' in target_vid else 'BV075_streaming'
         fb_info = CAPCUT_VOICE_MAP.get(fallback_vid, {})
-        res = _capcut_ns['doc_lo']([clean_text], fallback_vid, _rid=fb_info.get("rid", ""))
+        res = _capcut_ns['doc_lo']([clean_text], fallback_vid, _vt=fallback_vid, _rid=fb_info.get("rid", ""))
         if res and res[0]:
             resp = requests.get(res[0], timeout=15)
             if len(resp.content) > 300:
