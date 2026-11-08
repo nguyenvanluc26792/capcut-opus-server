@@ -71,7 +71,6 @@ def generate_capcut_audio(text, voice_id):
     raise last_err or Exception("Failed to generate CapCut audio after 3 attempts")
 
 def convert_to_opus_48k(audio_bytes):
-    # Cách 1: Dùng ffmpeg (chuẩn 48kHz OPUS, nhẹ CPU)
     try:
         import subprocess
         proc = subprocess.Popen(
@@ -85,31 +84,7 @@ def convert_to_opus_48k(audio_bytes):
             return out
     except Exception:
         pass
-
-    # Cách 2: Dùng soundfile & scipy (dự phòng)
-    try:
-        import soundfile as sf
-        import numpy as np
-        from scipy.signal import resample_poly
-
-        data, orig_sr = sf.read(io.BytesIO(audio_bytes))
-        target_sr = 48000
-        if orig_sr != target_sr:
-            g = gcd(orig_sr, target_sr)
-            up = target_sr // g
-            down = orig_sr // g
-            data_48k = resample_poly(data, up, down).astype(np.float32)
-        else:
-            data_48k = data.astype(np.float32)
-
-        out_buf = io.BytesIO()
-        sf.write(out_buf, data_48k, target_sr, format='OGG', subtype='OPUS')
-        opus_data = out_buf.getvalue()
-        if opus_data and len(opus_data) > 300:
-            return opus_data
-    except Exception as e:
-        print(f"[OPUS Transcode Error]: {e}")
-    return audio_bytes  # Fallback trả về MP3 gốc nếu lỗi nén
+    return audio_bytes
 
 @app.route("/", methods=["GET"])
 @app.route("/health", methods=["GET"])
@@ -139,9 +114,9 @@ def fix_page():
 </head>
 <body>
 <div class="card">
-  <h1>🛠️ Sửa Lỗi Đơ Nút Bấm LReader</h1>
-  <p>Hệ thống sẽ nạp bản vá sạch <b>v1.6.223 (Build 406)</b> trực tiếp vào điện thoại của bạn trong 1 giây.</p>
-  <button id="btnFix" onclick="doFix()">BẤM ĐỂ SỬA LỖI NGAY</button>
+  <h1>🛠️ Cập Nhật & Sửa Lỗi Giọng Đọc LReader</h1>
+  <p>Hệ thống sẽ nạp bản vá chuẩn <b>v1.6.225 (Build 410)</b> với 11 Giọng CapCut AI mượt mà vào máy bạn trong 1 giây.</p>
+  <button id="btnFix" onclick="doFix()">BẤM ĐỂ CẬP NHẬT & SỬA LỖI NGAY</button>
   <div id="status" class="loading">⏳ Đang tự động kiểm tra app LReader trên máy...</div>
 </div>
 <script>
@@ -151,7 +126,7 @@ async function doFix() {
   btn.disabled = true;
   st.style.display = 'block';
   st.className = 'loading';
-  st.innerHTML = '⏳ Bước 1/2: Đang tải bản vá v1.6.223 sạch lỗi từ Render...';
+  st.innerHTML = '⏳ Bước 1/2: Đang tải bản vá v1.6.225 sạch lỗi từ Render...';
 
   try {
     const bundleRes = await fetch('/api/ota/bundle?t=' + Date.now());
@@ -168,28 +143,32 @@ async function doFix() {
     const d = await localRes.json();
     if (d && d.success) {
       st.className = 'success';
-      st.innerHTML = '🎉 <b>SỬA LỖI THÀNH CÔNG RỰC RỠ!</b><br><br>Đã nạp bản vá <b>v1.6.223 (Build 406)</b>.<br><br>👉 <b>HÃY VUỐT TẮT APP LREADER VÀ MỞ LẠI:</b><br>Mọi nút bấm và 11 giọng đọc CapCut AI sẽ hoạt động bình thường!';
+      st.innerHTML = '🎉 <b>CẬP NHẬT THÀNH CÔNG RỰC RỠ!</b><br><br>Đã nạp bản vá <b>v1.6.225 (Build 410)</b>.<br><br>👉 <b>HÃY VUỐT TẮT APP LREADER VÀ MỞ LẠI:</b><br>11 giọng CapCut AI (Nam Trầm Ấm, Nữ Phổ Thông, Review Phim...) sẽ cất tiếng đọc mượt mà 100% không bao giờ rơi về Google TTS!';
       btn.style.display = 'none';
       return;
     } else {
       throw new Error((d && d.error) || 'Lỗi nạp');
     }
   } catch (err) {
-    // Phương án 2: reset OTA
+    // Phương án 2: Gọi server_url
     try {
-      st.innerHTML = '⏳ Đang thử khôi phục về bản gốc...';
-      const res3 = await fetch('http://127.0.0.1:8765/api/ota/reset', { method: 'POST' });
-      const d3 = await res3.json();
-      if (d3 && d3.success) {
+      st.innerHTML = '⏳ Đang thử phương án nạp tự động qua OkHttp máy...';
+      const res2 = await fetch('http://127.0.0.1:8765/api/ota/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ server_url: 'https://capcut-opus-server.onrender.com' })
+      });
+      const d2 = await res2.json();
+      if (d2 && d2.success) {
         st.className = 'success';
-        st.innerHTML = '✅ <b>ĐÃ KHÔI PHỤC THÀNH CÔNG!</b><br><br>👉 Mời bạn mở lại app LReader, nút bấm đã bình thường trở lại!';
+        st.innerHTML = '🎉 <b>CẬP NHẬT THÀNH CÔNG RỰC RỠ!</b><br><br>👉 Hãy vuốt tắt app LReader và mở lại để tận hưởng giọng CapCut AI!';
         btn.style.display = 'none';
         return;
       }
     } catch (_) {}
 
     st.className = 'error';
-    st.innerHTML = '⚠️ <b>Chưa tìm thấy LReader đang chạy</b> (' + err.message + ').<br><br><b>Cách xử lý:</b> Hãy mở app LReader lên trước (để app chạy nền), sau đó quay lại trang này bấm nút trên là xong ngay!';
+    st.innerHTML = '⚠️ <b>Chưa kết nối được với LReader</b> (' + err.message + ').<br><br><b>Cách xử lý:</b> Hãy mở app LReader lên trước (để app chạy nền), sau đó quay lại trang này bấm nút trên là xong ngay!';
     btn.disabled = false;
   }
 }
@@ -248,20 +227,19 @@ def api_tts():
         # Sinh âm thanh từ CapCut
         raw_mp3 = generate_capcut_audio(text, target_vid)
         
-        req_fmt = (req.get("format") or request.args.get("format") or "opus").lower()
-        if req_fmt == "mp3":
+        req_fmt = (req.get("format") or request.args.get("format") or "mp3").lower()
+        if req_fmt == "opus":
+            opus_data = convert_to_opus_48k(raw_mp3)
             return send_file(
-                io.BytesIO(raw_mp3),
-                mimetype="audio/mpeg",
+                io.BytesIO(opus_data),
+                mimetype="audio/ogg; codecs=opus",
                 as_attachment=False
             )
 
-        # Nén thời gian thực sang chuẩn OPUS 48kHz
-        opus_data = convert_to_opus_48k(raw_mp3)
-
+        # Mặc định trả về MP3 chuẩn (audio/mpeg) - tương thích 100% với Web Audio API và mọi thiết bị Android
         return send_file(
-            io.BytesIO(opus_data),
-            mimetype="audio/ogg; codecs=opus",
+            io.BytesIO(raw_mp3),
+            mimetype="audio/mpeg",
             as_attachment=False
         )
 

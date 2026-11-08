@@ -1,18 +1,19 @@
 {
-  "version": "v1.6.223",
-  "version_name": "v1.6.223",
-  "build": 406,
-  "version_code": 406,
-  "versionCode": 406,
+  "version": "v1.6.225",
+  "version_name": "v1.6.225",
+  "build": 410,
+  "version_code": 410,
+  "versionCode": 410,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "81cc6a1e094bad452547c8ec2248afa12e8a4c134c5a89bc373df8bed2df3471",
-  "size": 188444,
+  "sha256": "a4e61beb67fe92b1c55ae7d8e3aaa28abcdd8d34133486ffbc9ccb8b94a8afff",
+  "size": 188591,
   "force": true,
   "success": true,
   "changelog": [
-    "Sửa triệt để lỗi xung đột biến khiến đơ toàn bộ nút bấm",
-    "Cập nhật bản v1.6.223 (Build 406) sạch lỗi 100%",
-    "11 Giọng CapCut AI mượt mà và kết nối trực tiếp Render 24/7"
+    "Khóa triệt để Google TTS khi chọn giọng CapCut AI",
+    "Tự động chuyển cache VieNeu cũ sang CapCut AI (Nam Trầm Ấm, Nữ Phổ Thông)",
+    "Tối ưu âm thanh MP3 tương thích 100% Android WebView không lỗi giải mã",
+    "Hỗ trợ cả OkHttp nội bộ máy kết nối thẳng Render 24/7"
   ]
 }

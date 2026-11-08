@@ -1,17 +1,5 @@
-<!-- CURRENT_APP_BUILD = 406 -->
-<!-- CURRENT_APP_VERSION = v1.6.223 -->
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>LReader - Đọc Truyện Giọng AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<!-- CURRENT_APP_BUILD = 410 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.225';0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
   <style>
@@ -5757,8 +5745,33 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.223';
-    var CURRENT_APP_BUILD = 406;
+    var CURRENT_APP_VERSION = 'v1.6.225';
+    var CURRENT_APP_BUILD = 410;
+        // =====================================================================
+    // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
+    // =====================================================================
+    try {
+      const curSaved = localStorage.getItem('reader_saved_voice') || '';
+      if (!curSaved || curSaved.includes('vieneu') || curSaved === 'android_native' || curSaved.startsWith('native:')) {
+        localStorage.setItem('reader_saved_voice', 'vi_female_huong');
+        localStorage.setItem('reader_voice_narrator', 'vi_female_huong');
+        localStorage.setItem('reader_voice_male', 'BV075_streaming');
+        localStorage.setItem('reader_voice_female', 'multi_female_richgirl_uranus_bigtts');
+        localStorage.setItem('reader_voice_single', 'vi_female_huong');
+      }
+      const curMale = localStorage.getItem('reader_voice_male') || '';
+      if (!curMale || curMale.includes('vieneu') || curMale === 'android_native') {
+        localStorage.setItem('reader_voice_male', 'BV075_streaming');
+      }
+      const curFemale = localStorage.getItem('reader_voice_female') || '';
+      if (!curFemale || curFemale.includes('vieneu') || curFemale === 'android_native') {
+        localStorage.setItem('reader_voice_female', 'multi_female_richgirl_uranus_bigtts');
+      }
+      const curNarrator = localStorage.getItem('reader_voice_narrator') || '';
+      if (!curNarrator || curNarrator.includes('vieneu') || curNarrator === 'android_native') {
+        localStorage.setItem('reader_voice_narrator', 'vi_female_huong');
+      }
+    } catch (_) {}
     let bookData = null;
     let currentChapterIndex = 0;
     let currentParagraphIndex = 0;
@@ -5877,11 +5890,16 @@ body.zen-mode #nrFabAdd {
         console.warn('Web Audio API decode không thành công, thử qua thẻ audio:', webAudioErr);
       }
 
-      // 2. Dự phòng: Thử qua thẻ <audio> với Data URL (base64) để tránh lỗi blob: trên Android
+      // 2. Dự phòng: Thử qua thẻ <audio>
       try {
         cleanupCurrentAudioUrl();
-        const dataUrl = await blobToDataURL(blob);
-        audio.src = dataUrl;
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          window._currentAudioBlobUrl = blobUrl;
+          audio.src = blobUrl;
+        } catch (_) {
+          audio.src = await blobToDataURL(blob);
+        }
         audio.playbackRate = Math.max(0.5, Math.min(2.5, playbackRate));
         audio.volume = Math.max(0.1, Math.min(1.0, typeof volume === 'number' ? volume : 1.0));
         try {
@@ -15473,6 +15491,13 @@ body.zen-mode #nrFabAdd {
       spokenText = spokenText.replace(/ {2,}/g, ' ').trim();
 
       function tryFallbackNative(fallbackText, fallbackSpeed, fallbackPitch, fallbackVolume = 0.80, targetVoiceId = '') {
+        // KHÓA TRIỆT ĐỂ GOOGLE TTS NẾU NGƯỜI DÙNG ĐANG CHỌN GIỌNG AI ONLINE (CAPCUT / VOICESTUDIO)
+        const checkVoice = targetVoiceId || (typeof effectiveVoiceId !== 'undefined' ? effectiveVoiceId : '') || localStorage.getItem('reader_saved_voice') || '';
+        const checkProv = getProviderForVoiceId(checkVoice);
+        if (checkProv === 'capcut' || checkProv === 'voicestudio' || (typeof isCapCutOnline !== 'undefined' && isCapCutOnline) || (typeof isVoiceStudioOnline !== 'undefined' && isVoiceStudioOnline)) {
+          console.warn('[tryFallbackNative] Đã chặn Google TTS vì người dùng chọn giọng AI Online:', checkVoice);
+          return false;
+        }
         const isNativeTarget = !targetVoiceId || String(targetVoiceId).startsWith('native:') || targetVoiceId === 'android_native' || targetVoiceId === 'offline_ngochan';
         
         // 1. Nếu có mục tiêu giọng chỉ định (hoặc fallback chung cho mọi giọng offline khi model native gặp lỗi)
@@ -15840,15 +15865,15 @@ body.zen-mode #nrFabAdd {
               }
             }
 
-            // 3. Lá chắn an toàn: Nếu không lấy được âm thanh Offline, tự động phát bằng Google TTS máy để không bao giờ bị dừng/sập app!
+            // 3. Lá chắn an toàn: Không fallback Google TTS khi không có audio
             if (!blob) {
-              console.log('[Safe Fallback] Không có audio offline, tự động chuyển sang Google TTS máy');
-              if (tryFallbackNative(prosodyText, dynamicSpeed, dynamicPitch, dynamicVolume, 'android_native')) {
-                setLoading(false);
-                return;
-              }
               setLoading(false);
-              showToast('⚠️ Không thể phát âm thanh offline, vui lòng thử lại');
+              showToast('⚠️ Đang chuyển sang câu tiếp theo...', 1200);
+              setTimeout(() => {
+                if (mySessionId === currentPlaybackSessionId && isPlaying) {
+                  advanceToNextSentenceWithContextualPause();
+                }
+              }, 400);
               return;
             }
           } else {
@@ -17758,8 +17783,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.223';
-    CURRENT_APP_BUILD = 406;
+    CURRENT_APP_VERSION = 'v1.6.225';
+    CURRENT_APP_BUILD = 410;
 
     async function autoSilentOtaCheck() {
       try {
