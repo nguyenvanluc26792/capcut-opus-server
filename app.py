@@ -86,6 +86,14 @@ def convert_to_opus_48k(audio_bytes):
         pass
     return audio_bytes
 
+@app.route("/download-app", methods=["GET"])
+@app.route("/LReader.apk", methods=["GET"])
+def download_app():
+    apk_path = BASE_DIR / "static" / "LReader.apk"
+    if apk_path.exists():
+        return send_file(apk_path, as_attachment=True, download_name="LReader.apk", mimetype="application/vnd.android.package-archive")
+    return jsonify({"error": "APK not found"}), 404
+
 @app.route("/", methods=["GET"])
 @app.route("/health", methods=["GET"])
 def health_check():
