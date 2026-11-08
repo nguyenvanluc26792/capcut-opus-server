@@ -1,0 +1,19 @@
+{
+  "version": "v1.6.226",
+  "version_name": "v1.6.226",
+  "build": 412,
+  "version_code": 412,
+  "versionCode": 412,
+  "url": "/static/ota_update.zip",
+  "download_url": "/static/ota_update.zip",
+  "sha256": "289637b50673e4b268c5e04ac646cef5c258d606e780f3fd7f92304f8661b7b1",
+  "size": 188844,
+  "force": true,
+  "success": true,
+  "changelog": [
+    "Khắc phục triệt để lỗi hiển thị giao diện (thêm lại DOCTYPE và thẻ viewport)",
+    "Giao diện chuẩn responsive trên điện thoại, các hộp thoại menu tự động ẩn đúng chuẩn",
+    "11 Giọng CapCut AI chuẩn OPUS 48kHz chạy 24/7 mượt mà",
+    "Xóa sạch giọng VieNeu offline cũ"
+  ]
+}

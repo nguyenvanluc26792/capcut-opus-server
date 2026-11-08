@@ -1,19 +1,19 @@
 {
-  "version": "v1.6.225",
-  "version_name": "v1.6.225",
-  "build": 410,
-  "version_code": 410,
-  "versionCode": 410,
+  "version": "v1.6.226",
+  "version_name": "v1.6.226",
+  "build": 412,
+  "version_code": 412,
+  "versionCode": 412,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "a4e61beb67fe92b1c55ae7d8e3aaa28abcdd8d34133486ffbc9ccb8b94a8afff",
-  "size": 188591,
+  "sha256": "289637b50673e4b268c5e04ac646cef5c258d606e780f3fd7f92304f8661b7b1",
+  "size": 188844,
   "force": true,
   "success": true,
   "changelog": [
-    "Khóa triệt để Google TTS khi chọn giọng CapCut AI",
-    "Tự động chuyển cache VieNeu cũ sang CapCut AI (Nam Trầm Ấm, Nữ Phổ Thông)",
-    "Tối ưu âm thanh MP3 tương thích 100% Android WebView không lỗi giải mã",
-    "Hỗ trợ cả OkHttp nội bộ máy kết nối thẳng Render 24/7"
+    "Khắc phục triệt để lỗi hiển thị giao diện (thêm lại DOCTYPE và thẻ viewport)",
+    "Giao diện chuẩn responsive trên điện thoại, các hộp thoại menu tự động ẩn đúng chuẩn",
+    "11 Giọng CapCut AI chuẩn OPUS 48kHz chạy 24/7 mượt mà",
+    "Xóa sạch giọng VieNeu offline cũ"
   ]
 }
