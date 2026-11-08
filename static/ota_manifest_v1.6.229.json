@@ -1,0 +1,19 @@
+{
+  "version": "v1.6.229",
+  "version_name": "v1.6.229",
+  "build": 418,
+  "version_code": 418,
+  "versionCode": 418,
+  "url": "/static/ota_update.zip",
+  "download_url": "/static/ota_update.zip",
+  "sha256": "0bbb1fe08bbff88e9d7dff072d4fb2f2525e05d055dc0ab46a6ec1ca5204f9b6",
+  "size": 191119,
+  "force": true,
+  "success": true,
+  "changelog": [
+    "Vá lỗi chạy ngầm trên Android: Tự động chuyển 100% sang HTML5 Audio khi tắt màn hình, loại bỏ nguy cơ Chromium đình chỉ AudioContext",
+    "Tối ưu tốc độ sinh giọng CapCut xuống 2.4 giây bằng cách sửa truyền tham số _vt chính xác",
+    "Tăng timeout kết nối lên 25 giây và giảm số câu tải trước xuống 3 câu để không nghẽn mạng 4G khi chạy nền",
+    "Tích hợp Chó săn giám sát chạy ngầm (Watchdog) tự động giải cứu nếu âm thanh bị đứng quá 15 giây"
+  ]
+}

@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 417 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.228' -->
+<!-- CURRENT_APP_BUILD = 418 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.229' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.228';
-    var CURRENT_APP_BUILD = 417;
+    var CURRENT_APP_VERSION = 'v1.6.229';
+    var CURRENT_APP_BUILD = 418;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -5851,8 +5851,77 @@ body.zen-mode #nrFabAdd {
       }
     }
 
+    // =====================================================================
+    // CHÓ SĂN GIÁM SÁT TIẾN ĐỘ CHẠY NGẦM (BACKGROUND PLAYBACK WATCHDOG)
+    // Tự động giải cứu nếu phát hiện âm thanh bị kẹt > 15 giây khi chạy nền
+    // =====================================================================
+    let lastAudioProgressTimestamp = Date.now();
+    function markAudioProgress() {
+      lastAudioProgressTimestamp = Date.now();
+    }
+    try {
+      if (typeof audio !== 'undefined' && audio) {
+        audio.addEventListener('timeupdate', markAudioProgress);
+        audio.addEventListener('playing', markAudioProgress);
+        audio.addEventListener('play', markAudioProgress);
+      }
+    } catch (_) {}
+
+    setInterval(() => {
+      if (!window.isPlaying || window.isUserIntentionalPause || !window.bookData) return;
+      const now = Date.now();
+      const stalledDuration = now - lastAudioProgressTimestamp;
+      if (stalledDuration > 15000) {
+        console.warn(`[Watchdog] Phát hiện audio bị gián đoạn ${Math.round(stalledDuration/1000)}s khi chạy ngầm, tự động phục hồi câu tiếp theo!`);
+        lastAudioProgressTimestamp = now;
+        try {
+          if (typeof audio !== 'undefined' && audio && !audio.paused) {
+            audio.pause();
+          }
+        } catch (_) {}
+        if (typeof advanceToNextSentenceWithContextualPause === 'function') {
+          advanceToNextSentenceWithContextualPause();
+        }
+      }
+    }, 4000);
+
     async function playAudioBlobSmart(blob, playbackRate = 1.0, onEndedCallback, onErrorCallback, volume = 1.0, detuneCents = 0, voiceIdForTimbre = '') {
       const isMaiLinhTimbre = String(voiceIdForTimbre || '').toLowerCase().includes('mailinh');
+      const isCapCutOrOnline = String(voiceIdForTimbre || '').startsWith('capcut_') || 
+                               String(voiceIdForTimbre || '').startsWith('BV') || 
+                               String(voiceIdForTimbre || '').startsWith('multi_') || 
+                               String(voiceIdForTimbre || '').startsWith('vi_female') || 
+                               String(voiceIdForTimbre || '').startsWith('voicestudio_');
+      const preferNativeAudio = (document.hidden || isCapCutOrOnline);
+
+      // KHI CHẠY NỀN (document.hidden) HOẶC PHÁT GIỌNG ONLINE CAPCUT / VOICESTUDIO:
+      // Phát trực tiếp 100% qua thẻ <audio> HTML5 của hệ điều hành Android
+      // Tránh bị Chromium tự động đình chỉ (suspend) Web Audio API AudioContext khi tắt màn hình
+      if (preferNativeAudio) {
+        try {
+          cleanupCurrentAudioUrl();
+          try {
+            const blobUrl = URL.createObjectURL(blob);
+            window._currentAudioBlobUrl = blobUrl;
+            audio.src = blobUrl;
+          } catch (_) {
+            audio.src = await blobToDataURL(blob);
+          }
+          audio.playbackRate = Math.max(0.5, Math.min(2.5, playbackRate));
+          audio.volume = Math.max(0.1, Math.min(1.0, typeof volume === 'number' ? volume : 1.0));
+          audio.onended = () => {
+            markAudioProgress();
+            if (onEndedCallback) onEndedCallback();
+          };
+          audio.onerror = onErrorCallback;
+          markAudioProgress();
+          await audio.play();
+          return true;
+        } catch (audioErr) {
+          console.warn('HTML5 Audio background playback lỗi, thử Web Audio:', audioErr);
+        }
+      }
+
       // 1. Giải mã và phát trực tiếp bằng Web Audio API in-memory + GainNode (Sóng Volume V10.0) + Detune Cents + Mai Linh Crystal EQ
       try {
         const audioCtx = getAudioContext();
@@ -15025,7 +15094,7 @@ body.zen-mode #nrFabAdd {
                 if (prefetchAbort.signal.aborted) return null;
                 try {
                   const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 12000);
+                  const t = setTimeout(() => ctrl.abort(), 25000);
                   const res = await fetch(srv + '/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -15162,7 +15231,7 @@ body.zen-mode #nrFabAdd {
       const voiceId = getCurrentConfiguredVoiceId();
       const provider = getProviderForVoiceId(voiceId);
       const isOnlineVoice = (provider === 'vieneu' || provider === 'capcut' || String(voiceId).startsWith('vieneu_') || String(voiceId).startsWith('capcut_'));
-      const targetPrefetchCount = isOnlineVoice ? 6 : 3;
+      const targetPrefetchCount = isOnlineVoice ? 3 : 2;
 
       const currentAhead = getBufferedAheadCount(startIdx);
       if (currentAhead >= targetPrefetchCount) {
@@ -15951,12 +16020,18 @@ body.zen-mode #nrFabAdd {
             // 3. Lá chắn an toàn: Không fallback Google TTS khi không có audio
             if (!blob) {
               setLoading(false);
-              showToast('⚠️ Đang chuyển sang câu tiếp theo...', 1200);
-              setTimeout(() => {
+              showToast('⚠️ Đang chuyển sang câu tiếp theo...', 800);
+              if (document.hidden) {
                 if (mySessionId === currentPlaybackSessionId && isPlaying) {
                   advanceToNextSentenceWithContextualPause();
                 }
-              }, 400);
+              } else {
+                setTimeout(() => {
+                  if (mySessionId === currentPlaybackSessionId && isPlaying) {
+                    advanceToNextSentenceWithContextualPause();
+                  }
+                }, 300);
+              }
               return;
             }
           } else {
@@ -15985,7 +16060,7 @@ body.zen-mode #nrFabAdd {
               const fetchOneOnlineServer = async (srv) => {
                 try {
                   const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 12000);
+                  const t = setTimeout(() => ctrl.abort(), 25000);
                   const res = await fetch(srv + '/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -16085,11 +16160,17 @@ body.zen-mode #nrFabAdd {
           if (isOfflineAiVoice || isCapCutOnline || isVoiceStudioOnline) {
             setLoading(false);
             console.warn('[Audio Guard] Không thể tổng hợp giọng AI câu hiện tại, chuyển sang câu kế tiếp an toàn');
-            setTimeout(() => {
+            if (document.hidden) {
               if (mySessionId === currentPlaybackSessionId && isPlaying) {
                 advanceToNextSentenceWithContextualPause();
               }
-            }, 600);
+            } else {
+              setTimeout(() => {
+                if (mySessionId === currentPlaybackSessionId && isPlaying) {
+                  advanceToNextSentenceWithContextualPause();
+                }
+              }, 300);
+            }
             return;
           }
 
@@ -17845,8 +17926,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.228';
-    CURRENT_APP_BUILD = 417;
+    CURRENT_APP_VERSION = 'v1.6.229';
+    CURRENT_APP_BUILD = 418;
 
     async function autoSilentOtaCheck() {
       try {
