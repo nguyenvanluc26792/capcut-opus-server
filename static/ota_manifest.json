@@ -1,19 +1,19 @@
 {
-  "version": "v1.6.226",
-  "version_name": "v1.6.226",
-  "build": 412,
-  "version_code": 412,
-  "versionCode": 412,
+  "version": "v1.6.228",
+  "version_name": "v1.6.228",
+  "build": 415,
+  "version_code": 415,
+  "versionCode": 415,
   "url": "/static/ota_update.zip",
   "download_url": "/static/ota_update.zip",
-  "sha256": "289637b50673e4b268c5e04ac646cef5c258d606e780f3fd7f92304f8661b7b1",
-  "size": 188844,
+  "sha256": "507aad83a4f73b1ad19aaecd8a4988c5f2c30c41ceace0006d9292dcbcdbffa6",
+  "size": 188880,
   "force": true,
   "success": true,
   "changelog": [
-    "Khắc phục triệt để lỗi hiển thị giao diện (thêm lại DOCTYPE và thẻ viewport)",
-    "Giao diện chuẩn responsive trên điện thoại, các hộp thoại menu tự động ẩn đúng chuẩn",
-    "11 Giọng CapCut AI chuẩn OPUS 48kHz chạy 24/7 mượt mà",
-    "Xóa sạch giọng VieNeu offline cũ"
+    "Đua tốc độ đa máy chủ song song (Render + Cloudflare + Wi-Fi) phát ngay lập tức không trễ",
+    "Khóa triệt để 100% không cho local APK fallback sang Google TTS khi chọn CapCut AI",
+    "Tự động chọn server online nhanh nhất có âm thanh trong 0.5s",
+    "Đã sửa chuẩn toàn bộ giao diện không bị vỡ bố cục"
   ]
 }

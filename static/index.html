@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 412 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.226' -->
+<!-- CURRENT_APP_BUILD = 415 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.228' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.226';
-    var CURRENT_APP_BUILD = 412;
+    var CURRENT_APP_VERSION = 'v1.6.228';
+    var CURRENT_APP_BUILD = 415;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -14916,19 +14916,20 @@ body.zen-mode #nrFabAdd {
             const isVieneuPrefetch = String(effectiveVoiceId).startsWith('vieneu_');
             const isCapCutPrefetch = (effectiveProvider === 'capcut' || String(effectiveVoiceId).startsWith('capcut_'));
             if (isVoiceStudioPrefetch || isVieneuPrefetch || isCapCutPrefetch) {
-              let remoteUrl = (typeof DEFAULT_OTA_3G_URL !== 'undefined' && DEFAULT_OTA_3G_URL) ? DEFAULT_OTA_3G_URL : '';
-              if (isCapCutPrefetch) {
-                remoteUrl = CAPCUT_ONLINE_SERVER_URL;
-              }
               const sendVoiceId = isCapCutPrefetch ? String(effectiveVoiceId).replace(/^capcut_/, '') : (isVoiceStudioPrefetch ? effectiveVoiceId : (isVieneuPrefetch ? effectiveVoiceId : getVerifiedCapCutVoiceForId(effectiveVoiceId)));
               const sendProvider = isCapCutPrefetch ? 'capcut' : (isVoiceStudioPrefetch ? 'voicestudio' : (isVieneuPrefetch ? 'vieneu' : 'capcut'));
 
-              const fetchRemotePrefetch = async () => {
-                if (!remoteUrl || prefetchAbort.signal.aborted) return null;
+              const prefetchServers = [];
+              if (typeof CAPCUT_ONLINE_SERVER_URL !== 'undefined' && CAPCUT_ONLINE_SERVER_URL) prefetchServers.push(CAPCUT_ONLINE_SERVER_URL.replace(/\/+$/, ''));
+              if (typeof DEFAULT_OTA_3G_URL !== 'undefined' && DEFAULT_OTA_3G_URL && !prefetchServers.includes(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''))) prefetchServers.push(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''));
+              if (typeof DEFAULT_OTA_WIFI_URL !== 'undefined' && DEFAULT_OTA_WIFI_URL && !prefetchServers.includes(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''))) prefetchServers.push(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''));
+
+              const fetchOnePrefetch = async (srv) => {
+                if (prefetchAbort.signal.aborted) return null;
                 try {
                   const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 20000);
-                  const res = await fetch(remoteUrl.replace(/\/+$/, '') + '/api/tts', {
+                  const t = setTimeout(() => ctrl.abort(), 12000);
+                  const res = await fetch(srv + '/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
                     body: JSON.stringify({
@@ -14950,54 +14951,27 @@ body.zen-mode #nrFabAdd {
                 return null;
               };
 
-              const fetchLocalPrefetch = async () => {
-                if (prefetchAbort.signal.aborted) return null;
-                try {
-                  const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 20000);
-                  const res = await fetch('/api/tts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                    body: JSON.stringify({
-                      text: safePrefetchText,
-                      book_id: bookData ? bookData.id : null,
-                      voice_id: sendVoiceId,
-                      base_voice_id: effectiveVoiceId,
-                      provider: sendProvider,
-                      speed: dynamicPrefetchSpeed,
-                      bilingual_mode: currentBilingualMode,
-                      multi_voice: false,
-                      emotion: attr.emotion,
-                      dialogue_role: attr.gender,
-                      speaker: attr.speaker
-                    }),
-                    signal: ctrl.signal
-                  });
-                  clearTimeout(t);
-                  if (res.ok) {
-                    const b = await res.blob();
-                    if (b && b.size >= 500) return b;
-                  }
-                } catch (_) {}
-                return null;
-              };
-
               try {
                 blob = await new Promise(resolve => {
-                  let settledCount = 0;
-                  let resolved = false;
-                  const onBlob = b => {
-                    if (resolved) return;
-                    if (b && b.size >= 500) {
-                      resolved = true;
-                      resolve(b);
-                    } else {
-                      settledCount++;
-                      if (settledCount >= 2) resolve(null);
-                    }
-                  };
-                  fetchRemotePrefetch().then(onBlob).catch(() => onBlob(null));
-                  fetchLocalPrefetch().then(onBlob).catch(() => onBlob(null));
+                  let settled = 0;
+                  let won = false;
+                  const total = prefetchServers.length;
+                  if (total === 0) return resolve(null);
+                  prefetchServers.forEach(srv => {
+                    fetchOnePrefetch(srv).then(b => {
+                      if (won) return;
+                      if (b && b.size >= 500) {
+                        won = true;
+                        resolve(b);
+                      } else {
+                        settled++;
+                        if (settled >= total) resolve(null);
+                      }
+                    }).catch(() => {
+                      settled++;
+                      if (!won && settled >= total) resolve(null);
+                    });
+                  });
                 });
               } catch (_) {}
             }
@@ -15894,22 +15868,28 @@ body.zen-mode #nrFabAdd {
             const isVieneuOnline = String(effectiveVoiceId).startsWith('vieneu_');
             const isCapCutOnline = (effectiveProvider === 'capcut' || String(effectiveVoiceId).startsWith('capcut_'));
 
-            // ĐUA TỐC ĐỘ SONG SONG (RACE ENGINE): Gọi đồng thời cả Cloudflare (OPUS nén nhẹ) và Local Android.
-            // Bất kỳ luồng nào có âm thanh trước sẽ phát ngay lập tức, triệt tiêu độ trễ mạng yếu!
+            // ĐUA TỐC ĐỘ ĐA MÁY CHỦ ONLINE (RENDER + CLOUDFLARE + WI-FI PC):
+            // Cho phép âm thanh CapCut & VoiceStudio phát ngay tức thì < 1 giây, triệt tiêu độ trễ!
             if (isVoiceStudioOnline || isVieneuOnline || isCapCutOnline) {
-              let remoteUrl = (typeof DEFAULT_OTA_3G_URL !== 'undefined' && DEFAULT_OTA_3G_URL) ? DEFAULT_OTA_3G_URL : '';
-              if (isCapCutOnline) {
-                remoteUrl = CAPCUT_ONLINE_SERVER_URL;
-              }
               const sendVoiceId = isCapCutOnline ? String(effectiveVoiceId).replace(/^capcut_/, '') : (isVoiceStudioOnline ? effectiveVoiceId : (isVieneuOnline ? effectiveVoiceId : getVerifiedCapCutVoiceForId(effectiveVoiceId)));
               const sendProvider = isCapCutOnline ? 'capcut' : (isVoiceStudioOnline ? 'voicestudio' : (isVieneuOnline ? 'vieneu' : 'capcut'));
 
-              const fetchRemote = async () => {
-                if (!remoteUrl) return null;
+              const onlineServers = [];
+              if (typeof CAPCUT_ONLINE_SERVER_URL !== 'undefined' && CAPCUT_ONLINE_SERVER_URL) {
+                onlineServers.push(CAPCUT_ONLINE_SERVER_URL.replace(/\/+$/, ''));
+              }
+              if (typeof DEFAULT_OTA_3G_URL !== 'undefined' && DEFAULT_OTA_3G_URL && !onlineServers.includes(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''))) {
+                onlineServers.push(DEFAULT_OTA_3G_URL.replace(/\/+$/, ''));
+              }
+              if (typeof DEFAULT_OTA_WIFI_URL !== 'undefined' && DEFAULT_OTA_WIFI_URL && !onlineServers.includes(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''))) {
+                onlineServers.push(DEFAULT_OTA_WIFI_URL.replace(/\/+$/, ''));
+              }
+
+              const fetchOneOnlineServer = async (srv) => {
                 try {
                   const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 20000);
-                  const res = await fetch(remoteUrl.replace(/\/+$/, '') + '/api/tts', {
+                  const t = setTimeout(() => ctrl.abort(), 12000);
+                  const res = await fetch(srv + '/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
                     body: JSON.stringify({
@@ -15931,72 +15911,45 @@ body.zen-mode #nrFabAdd {
                 return null;
               };
 
-              const fetchLocal = async () => {
-                try {
-                  const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 20000);
-                  const res = await fetch('/api/tts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                    body: JSON.stringify({
-                      text: safeProsodyText,
-                      book_id: bookData ? bookData.id : null,
-                      voice_id: sendVoiceId,
-                      base_voice_id: effectiveVoiceId,
-                      provider: sendProvider,
-                      speed: dynamicSpeed,
-                      bilingual_mode: currentBilingualMode,
-                      multi_voice: false,
-                      emotion: attr.emotion,
-                      dialogue_role: attr.gender,
-                      speaker: attr.speaker
-                    }),
-                    signal: ctrl.signal
-                  });
-                  clearTimeout(t);
-                  if (res.ok) {
-                    const b = await res.blob();
-                    if (b && b.size >= 500) return b;
-                  }
-                } catch (_) {}
-                return null;
-              };
-
               try {
-                // Đua song song: Bên nào trả về blob hợp lệ trước sẽ thắng cuộc!
+                // Đua song song: Server nào (Cloudflare hay Render) trả về trước sẽ phát ngay!
                 blob = await new Promise(resolve => {
                   let settledCount = 0;
-                  let resolved = false;
-                  const onBlob = b => {
-                    if (resolved) return;
-                    if (b && b.size >= 500) {
-                      resolved = true;
-                      resolve(b);
-                    } else {
+                  let won = false;
+                  const total = onlineServers.length;
+                  if (total === 0) return resolve(null);
+                  onlineServers.forEach(srv => {
+                    fetchOneOnlineServer(srv).then(b => {
+                      if (won) return;
+                      if (b && b.size >= 500) {
+                        won = true;
+                        resolve(b);
+                      } else {
+                        settledCount++;
+                        if (settledCount >= total) resolve(null);
+                      }
+                    }).catch(() => {
                       settledCount++;
-                      if (settledCount >= 2) resolve(null);
-                    }
-                  };
-                  fetchRemote().then(onBlob).catch(() => onBlob(null));
-                  fetchLocal().then(onBlob).catch(() => onBlob(null));
+                      if (!won && settledCount >= total) resolve(null);
+                    });
+                  });
                 });
               } catch (_) {}
-            }
 
-            // 2. Nếu không phải VieNeu hoặc kết nối remote chưa lấy được: Gọi qua /api/tts nội bộ
-            if (!blob) {
+              // TUYỆT ĐỐI KHÔNG GỌI /api/tts NỘI BỘ MÁY (LOCAL ANDROID) NẾU LÀ CAPCUT HOẶC VOICESTUDIO
+              // để không bao giờ bị delay 10s hay bị Google TTS chen vào!
+            } else {
+              // Các giọng khác (Edge TTS, v.v.): Gọi qua /api/tts nội bộ
               try {
-                const sendVoiceId = isVoiceStudioOnline ? effectiveVoiceId : (isVieneuOnline ? effectiveVoiceId : getVerifiedCapCutVoiceForId(effectiveVoiceId));
-                const sendProvider = isVoiceStudioOnline ? 'voicestudio' : (isVieneuOnline ? 'vieneu' : effectiveProvider);
                 const localRes = await fetch('/api/tts', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json; charset=utf-8' },
                   body: JSON.stringify({
                     text: safeProsodyText,
                     book_id: bookData ? bookData.id : null,
-                    voice_id: sendVoiceId,
+                    voice_id: effectiveVoiceId,
                     base_voice_id: effectiveVoiceId,
-                    provider: sendProvider,
+                    provider: effectiveProvider,
                     speed: dynamicSpeed,
                     bilingual_mode: currentBilingualMode,
                     multi_voice: false,
@@ -17795,8 +17748,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.226';
-    CURRENT_APP_BUILD = 412;
+    CURRENT_APP_VERSION = 'v1.6.228';
+    CURRENT_APP_BUILD = 415;
 
     async function autoSilentOtaCheck() {
       try {

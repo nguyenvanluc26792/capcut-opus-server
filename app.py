@@ -225,7 +225,10 @@ def api_tts():
         dialogue_role = req.get("dialogue_role") or "narration"
 
         is_quote = bool(re.match(r'^\s*[""“«「『\-–—―]', text) or re.search(r'[""“«「『][^"”»」』]+[""”»」』]', text))
-        if dialogue_role == "female":
+        # Nếu người dùng đã chọn rõ voice_id (ví dụ: Nữ Kiwi, Nhỏ Ngọt Ngào, Nữ Phổ Thông...), tôn trọng 100% lựa chọn
+        if voice_id and voice_id not in ["vi_female_huong", "BV075_streaming"]:
+            target_vid = voice_id
+        elif dialogue_role == "female":
             target_vid = "multi_female_richgirl_uranus_bigtts"
         elif dialogue_role == "male" or (is_quote and dialogue_role != "narration"):
             target_vid = "BV075_streaming"
