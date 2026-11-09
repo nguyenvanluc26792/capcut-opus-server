@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 419 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.230' -->
+<!-- CURRENT_APP_BUILD = 420 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.231' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://specially-frequency-regression-called.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.230';
-    var CURRENT_APP_BUILD = 419;
+    var CURRENT_APP_VERSION = 'v1.6.231';
+    var CURRENT_APP_BUILD = 420;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -11257,6 +11257,18 @@ body.zen-mode #nrFabAdd {
       localStorage.setItem('reader_voice_narrator', val);
       localStorage.setItem('reader_voice_single', val);
 
+      // ÉP 100% SINGLE-VOICE NẾU CHỌN VOICESTUDIO HOẶC VIENEU:
+      const isForceSingle = String(val).startsWith('voicestudio_') || String(val).startsWith('vieneu_') || (typeof provider !== 'undefined' && (provider === 'voicestudio' || provider === 'vieneu'));
+      if (isForceSingle) {
+        localStorage.setItem('reader_voice_mode', 'single');
+        localStorage.setItem('reader_multi_voice', '0');
+        localStorage.setItem('reader_voice_male', val);
+        localStorage.setItem('reader_voice_female', val);
+        localStorage.setItem('reader_voice_narrator', val);
+        localStorage.setItem('reader_voice_single', val);
+        if (typeof updateVoiceModeUI === 'function') updateVoiceModeUI();
+      }
+
       // Tự động gán cặp giọng thoại phù hợp với nhóm giọng vừa chọn
       const isValFemale = isKnownFemaleVoice(val);
       const isValMale = isKnownMaleVoice(val);
@@ -14520,7 +14532,9 @@ body.zen-mode #nrFabAdd {
 
     function getPairedMultiVoice(baseVoiceId, provider, targetGender, crowdRole = '', customVoiceId = '') {
       const mode = getVoiceMode();
-      if (mode === 'single') {
+      // ÉP TUYỆT ĐỐI 100% ĐỌC 1 GIỌNG CHO VOICESTUDIO & VIENEU (KHÔNG PHÂN VAI):
+      const isSingleVoiceLocked = (mode === 'single' || provider === 'voicestudio' || String(baseVoiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(baseVoiceId).startsWith('vieneu_'));
+      if (isSingleVoiceLocked) {
         return baseVoiceId;
       }
       // 0. ƯU TIÊN CAO NHẤT: Giọng đọc riêng được chỉ định theo Tên nhân vật (ví dụ: Tiểu Kiệt -> giọng Bé trai)
@@ -15027,8 +15041,8 @@ body.zen-mode #nrFabAdd {
       spokenText = spokenText.replace(/ {2,}/g, ' ').trim();
 
       let effectiveVoiceId = voiceId;
-      const isVoiceOfflinePrefetch = (provider === 'offline' || String(voiceId).startsWith('offline_') || String(localStorage.getItem('reader_saved_voice')).startsWith('offline_'));
-      if (isMultiVoice && getVoiceMode() !== 'single') {
+      const isVoiceStudioOrVieNeuPrefetch = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
+      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeuPrefetch) {
         if (attr.isDialogue) {
           effectiveVoiceId = getPairedMultiVoice(voiceId, provider, attr.gender, '', attr.customVoiceId);
         } else {
@@ -15037,6 +15051,9 @@ body.zen-mode #nrFabAdd {
         }
       } else {
         effectiveVoiceId = getSingleVoice() || voiceId;
+      }
+      if (isVoiceStudioOrVieNeuPrefetch) {
+        effectiveVoiceId = voiceId; // ÉP 100% GIỮ NGUYÊN GIỌNG ĐƯỢC CHỌN
       }
       const effectiveProvider = getProviderForVoiceId(effectiveVoiceId);
       // Chuẩn hóa tốc độ cơ sở: Không nhân lặp attr.speedFactor nhiều lần
@@ -15237,13 +15254,17 @@ body.zen-mode #nrFabAdd {
         if (!text || isParagraphSkipped(text)) continue;
 
         let effVoice = voiceId;
-        if (isMultiVoice && getVoiceMode() !== 'single') {
+        const isVoiceStudioOrVieNeuCache = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
+        if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeuCache) {
           const nextS = (i + 1 < allSentences.length) ? allSentences[i + 1] : '';
           const prevS = (i > 0) ? allSentences[i - 1] : '';
           const attr = analyzeDialogueAttribution(text, nextS, prevS, i);
           effVoice = attr.isDialogue ? getPairedMultiVoice(voiceId, provider, attr.gender) : (localStorage.getItem('reader_voice_narrator') || voiceId);
         } else {
           effVoice = getSingleVoice() || voiceId;
+        }
+        if (isVoiceStudioOrVieNeuCache) {
+          effVoice = voiceId;
         }
 
         let hasCached = false;
@@ -15738,8 +15759,8 @@ body.zen-mode #nrFabAdd {
 
       // 1. Phân vai đa giọng & Xác định cấu hình giọng (Offline vs Online)
       let effectiveVoiceId = voiceId;
-      const isVoiceOfflineExplicit = (provider === 'offline' || String(voiceId).startsWith('offline_') || String(localStorage.getItem('reader_saved_voice')).startsWith('offline_'));
-      if (isMultiVoice && getVoiceMode() !== 'single') {
+      const isVoiceStudioOrVieNeu = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
+      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeu) {
         if (attr.isDialogue) {
           effectiveVoiceId = getPairedMultiVoice(voiceId, provider, attr.gender, attr.crowdRole, attr.customVoiceId);
         } else {
@@ -15747,6 +15768,9 @@ body.zen-mode #nrFabAdd {
         }
       } else {
         effectiveVoiceId = getSingleVoice() || voiceId;
+      }
+      if (isVoiceStudioOrVieNeu) {
+        effectiveVoiceId = voiceId; // ÉP 100% GIỮ NGUYÊN GIỌNG ĐƯỢC CHỌN CHO VOICESTUDIO VÀ VIENEU
       }
       console.log(`[Voice Dispatch] S${idx+1}: isDialogue=${attr.isDialogue}, gender=${attr.gender}, speaker='${attr.speaker}', voice=${effectiveVoiceId}`);
       const effectiveProvider = getProviderForVoiceId(effectiveVoiceId);

@@ -1,18 +1,18 @@
 {
-  "version": "v1.6.230",
-  "version_name": "v1.6.230",
-  "build": 419,
-  "version_code": 419,
-  "versionCode": 419,
+  "version": "v1.6.231",
+  "version_name": "v1.6.231",
+  "build": 420,
+  "version_code": 420,
+  "versionCode": 420,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "bbc8e3654139978d6f73dd6d2db4d3b4f542ada0a100fcae32b7e63052229e5d",
-  "size": 867448,
+  "sha256": "4dab54daecad2721c067d1953e67d405873736162a8798eeb258d34377426194",
+  "size": 869131,
   "force": true,
   "success": true,
   "changelog": [
-    "🚀 Tích hợp nhóm 10 giọng đọc VieNeu Turbo GPU (Trúc Ly, Mỹ Duyên, Thiền Tâm Đức, Hải Đăng, Thiện Minh...)",
-    "🛡️ Single-Voice Mode: Ép đọc 1 giọng duy nhất xuyên suốt, triệt tiêu 100% tình trạng nhảy vai nam nữ hay giọng lớ lớ",
-    "⚡ Kết nối trực tiếp máy chủ GPU đám mây Tesla T4 với chuẩn nén OPUS 48kHz Hi-Fi siêu nhẹ (~15KB/câu)"
+    "🔒 KHÓA CHẶT SINGLE-VOICE: Ép 100% chỉ đọc đúng 1 giọng duy nhất cho VoiceStudio và VieNeu Turbo!",
+    "🚫 Vô hiệu hóa triệt để cơ chế tự đổi sang giọng nam/nữ của CapCut khi đang dùng VoiceStudio",
+    "⚡ Tự động chuyển app sang Mode 2 (1 Voice duy nhất) ngay khi bạn chọn bất kỳ giọng VoiceStudio hoặc VieNeu nào"
   ]
 }
