@@ -24,6 +24,33 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 
+GPU_SERVER_URL = os.environ.get("GPU_SERVER_URL", "https://specially-frequency-regression-called.trycloudflare.com").rstrip("/")
+
+def forward_to_gpu_tts(text, voice_id, fmt="opus"):
+    import urllib.request, json
+    clean_text = re.sub(r'[\s\u00A0—–-]+', ' ', text).strip()
+    url = f"{GPU_SERVER_URL}/v1/audio/speech"
+    clean_vid = str(voice_id).replace("vieneu_", "")
+    payload = {
+        "model": "vieneu-v3-turbo",
+        "voice": clean_vid,
+        "input": clean_text,
+        "response_format": fmt
+    }
+    try:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json", "User-Agent": "CapcutOpusProxy/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            data = resp.read()
+            if len(data) > 300:
+                return data
+    except Exception as e:
+        print(f"[WARN] Lỗi proxy GPU VieNeu ({url}): {e}")
+    return None
+
 # 1. Nạp module CapCut gốc
 BASE_DIR = Path(__file__).resolve().parent
 CAPCUT_MODULE_PATH = BASE_DIR / "decomp_tts_service.bin"
