@@ -1,3 +1,5 @@
+from dialogue_attribution_engine import DialogueAttributionEngine
+dialogue_engine = DialogueAttributionEngine()
 import os
 import sys
 import io
@@ -532,3 +534,28 @@ def get_offline_voice_demo(voice_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+@app.route("/api/parse_dialogue", methods=["POST"])
+def api_parse_dialogue():
+    data = request.get_json(force=True, silent=True) or {}
+    text = data.get("text", "")
+    if not text.strip():
+        return jsonify({"error": "Empty text"}), 400
+    segments = dialogue_engine.parse_text(text)
+    return jsonify({
+        "status": "success",
+        "total_segments": len(segments),
+        "segments": [
+            {
+                "id": s.index,
+                "text": s.text,
+                "role": s.role,
+                "is_dialogue": s.is_dialogue,
+                "confidence": s.confidence,
+                "attribution_rule": s.attribution_rule,
+                "speaker_tag": s.speaker_tag,
+                "para_index": s.para_index
+            }
+            for s in segments
+        ]
+    })
