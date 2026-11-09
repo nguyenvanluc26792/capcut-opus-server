@@ -1,19 +1,18 @@
 {
-  "version": "v1.6.229",
-  "version_name": "v1.6.229",
-  "build": 418,
-  "version_code": 418,
-  "versionCode": 418,
-  "url": "/static/ota_update.zip",
-  "download_url": "/static/ota_update.zip",
-  "sha256": "0bbb1fe08bbff88e9d7dff072d4fb2f2525e05d055dc0ab46a6ec1ca5204f9b6",
-  "size": 191119,
+  "version": "v1.6.230",
+  "version_name": "v1.6.230",
+  "build": 419,
+  "version_code": 419,
+  "versionCode": 419,
+  "url": "/static/index.html",
+  "download_url": "/static/index.html",
+  "sha256": "bbc8e3654139978d6f73dd6d2db4d3b4f542ada0a100fcae32b7e63052229e5d",
+  "size": 867448,
   "force": true,
   "success": true,
   "changelog": [
-    "Vá lỗi chạy ngầm trên Android: Tự động chuyển 100% sang HTML5 Audio khi tắt màn hình, loại bỏ nguy cơ Chromium đình chỉ AudioContext",
-    "Tối ưu tốc độ sinh giọng CapCut xuống 2.4 giây bằng cách sửa truyền tham số _vt chính xác",
-    "Tăng timeout kết nối lên 25 giây và giảm số câu tải trước xuống 3 câu để không nghẽn mạng 4G khi chạy nền",
-    "Tích hợp Chó săn giám sát chạy ngầm (Watchdog) tự động giải cứu nếu âm thanh bị đứng quá 15 giây"
+    "🚀 Tích hợp nhóm 10 giọng đọc VieNeu Turbo GPU (Trúc Ly, Mỹ Duyên, Thiền Tâm Đức, Hải Đăng, Thiện Minh...)",
+    "🛡️ Single-Voice Mode: Ép đọc 1 giọng duy nhất xuyên suốt, triệt tiêu 100% tình trạng nhảy vai nam nữ hay giọng lớ lớ",
+    "⚡ Kết nối trực tiếp máy chủ GPU đám mây Tesla T4 với chuẩn nén OPUS 48kHz Hi-Fi siêu nhẹ (~15KB/câu)"
   ]
 }

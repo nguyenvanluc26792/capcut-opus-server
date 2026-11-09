@@ -483,6 +483,12 @@ def api_tts():
         provider = req.get("provider", "capcut")
         dialogue_role = req.get("dialogue_role") or "narration"
 
+        # ĐIỀU HƯỚNG VIENEU TURBO VÀ VOICESTUDIO SANG CLOUD GPU:
+        if provider == "vieneu" or str(voice_id).startswith("vieneu_") or provider == "voicestudio" or str(voice_id).startswith("voicestudio_"):
+            gpu_audio = forward_to_gpu_tts(text, voice_id, fmt="opus")
+            if gpu_audio:
+                return Response(gpu_audio, mimetype="audio/ogg; codecs=opus")
+
         # XỬ LÝ ĐẶC TRỊ VOICESTUDIO: Chuẩn hóa ngữ âm chống đọc lơ lớ
         is_voicestudio = (provider == "voicestudio" or str(voice_id).startswith("voicestudio_"))
         if is_voicestudio:

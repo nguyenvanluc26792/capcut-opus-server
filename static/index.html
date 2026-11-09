@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 418 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.229' -->
+<!-- CURRENT_APP_BUILD = 419 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.230' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5754,11 +5754,11 @@ body.zen-mode #nrFabAdd {
   <audio id="audioPlayer" style="display: none;"></audio>
 
   <script>
-    var DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
+    var DEFAULT_OTA_3G_URL = 'https://specially-frequency-regression-called.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.229';
-    var CURRENT_APP_BUILD = 418;
+    var CURRENT_APP_VERSION = 'v1.6.230';
+    var CURRENT_APP_BUILD = 419;
         // =====================================================================
     // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
     // =====================================================================
@@ -10999,6 +10999,16 @@ body.zen-mode #nrFabAdd {
           offlineVoicesData = resOffline;
         }
         const FALLBACK_ONLINE_VOICES = [
+          { id: "vieneu_trucly", name: "Trúc Ly (VieNeu • Nữ Trong Trẻo)", provider: "vieneu" },
+          { id: "vieneu_myduyen", name: "Mỹ Duyên (VieNeu • Nữ Ngọt Ngào)", provider: "vieneu" },
+          { id: "vieneu_thientamduc", name: "Thiền Tâm Đức (VieNeu • Nam Dẫn Truyện)", provider: "vieneu" },
+          { id: "vieneu_haidang", name: "Hải Đăng (VieNeu • Nam Trầm Ấm)", provider: "vieneu" },
+          { id: "vieneu_thienminh", name: "Thiền Minh (VieNeu • Nam Tự Nhiên)", provider: "vieneu" },
+          { id: "vieneu_maianh", name: "Mai Anh (VieNeu • Nữ Đêm Khuya)", provider: "vieneu" },
+          { id: "vieneu_thuydung", name: "Thùy Dung (VieNeu • Nữ Thanh Lịch)", provider: "vieneu" },
+          { id: "vieneu_quangson", name: "Quang Sơn (VieNeu • Nam Điềm Đạm)", provider: "vieneu" },
+          { id: "vieneu_ductri", name: "Đức Trí (VieNeu • Nam Trí Tuệ)", provider: "vieneu" },
+          { id: "vieneu_xuanvinh", name: "Xuân Vĩnh (VieNeu • Nam Dõng Dạc)", provider: "vieneu" },
           { id: "BV421_vivn_streaming", name: "Nhỏ Ngọt Ngào (Nữ Dẫn Truyện • Siêu Truyền Cảm)", provider: "capcut" },
           { id: "BV075_streaming", name: "Nam Trầm Ấm (Kể Chuyện • Tiên Hiệp & Kiếm Hiệp)", provider: "capcut" },
           { id: "multi_female_richgirl_uranus_bigtts", name: "Review Phim (Nữ Siêu Diễn Cảm • Tự Nhiên)", provider: "capcut" },
@@ -11040,6 +11050,35 @@ body.zen-mode #nrFabAdd {
                 const comesFromApp = (window.HonorBridge && typeof window.HonorBridge.isModelDownloaded === 'function');
 
         // Nhóm Kokoro đã được gỡ bỏ khỏi danh sách
+
+                // 1. Nhóm VieNeu Turbo GPU (Chính chủ pnnbao97 - 48kHz Chuẩn Việt)
+        const grpVieNeu = document.createElement('optgroup');
+        grpVieNeu.label = '🚀 VieNeu Turbo AI (GPU Đám Mây • 48kHz Chuẩn Việt)';
+        grpVieNeu.dataset.group = 'vieneu';
+
+        const VIENEU_VOICES_CATALOG = [
+          { id: "vieneu_trucly", name: "Trúc Ly (Nữ Trong Trẻo • Tự Nhiên)" },
+          { id: "vieneu_myduyen", name: "Mỹ Duyên (Nữ Ngọt Ngào • Dịu Dàng)" },
+          { id: "vieneu_thientamduc", name: "Thiền Tâm Đức (Nam Dẫn Truyện • Chuẩn Audiobook)" },
+          { id: "vieneu_haidang", name: "Hải Đăng (Nam Trầm Ấm • Kiếm Hiệp/Tiên Hiệp)" },
+          { id: "vieneu_thienminh", name: "Thiện Minh (Nam Trẻ Trung • Tự Nhiên)" },
+          { id: "vieneu_maianh", name: "Mai Anh (Nữ Kể Chuyện Đêm Khuya)" },
+          { id: "vieneu_thuydung", name: "Thùy Dung (Nữ Miền Nam • Thanh Lịch)" },
+          { id: "vieneu_quangson", name: "Quang Sơn (Nam Điềm Đạm • Truyện Dài)" },
+          { id: "vieneu_ductri", name: "Đức Trí (Nam Trí Tuệ • Khoa Học & Triết Lý)" },
+          { id: "vieneu_xuanvinh", name: "Xuân Vĩnh (Nam Dõng Dạc • Mạnh Mẽ)" }
+        ];
+
+        VIENEU_VOICES_CATALOG.forEach(vn => {
+          const opt = document.createElement('option');
+          opt.value = vn.id;
+          opt.dataset.provider = 'vieneu';
+          opt.dataset.group = 'vieneu';
+          opt.textContent = `🚀 ${vn.name}`;
+          if (savedVoice === vn.id) opt.selected = true;
+          grpVieNeu.appendChild(opt);
+        });
+        select.appendChild(grpVieNeu);
 
         // 1a. Nhóm CapCut AI (11 Giọng Đọc Truyền Cảm - OPUS 48kHz Online 24/7)
         const grpCapCut = document.createElement('optgroup');
