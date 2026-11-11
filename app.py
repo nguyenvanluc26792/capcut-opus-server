@@ -24,7 +24,24 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 
-GPU_SERVER_URL = os.environ.get("GPU_SERVER_URL", "https://specially-frequency-regression-called.trycloudflare.com").rstrip("/")
+GPU_SERVER_URL = os.environ.get("GPU_SERVER_URL", "https://effects-presents-fighters-collins.trycloudflare.com").rstrip("/")
+
+@app.route("/api/gpu/status", methods=["GET"])
+def api_gpu_status():
+    return jsonify({"gpu_server_url": GPU_SERVER_URL})
+
+@app.route("/api/gpu/register", methods=["POST"])
+def api_gpu_register():
+    global GPU_SERVER_URL
+    data = request.get_json(force=True, silent=True) or {}
+    new_url = str(data.get("url") or "").strip().rstrip("/")
+    expected_token = os.environ.get("GPU_REGISTER_TOKEN", "").strip()
+    if expected_token and data.get("token") != expected_token:
+        return jsonify({"error": "Unauthorized"}), 403
+    if not (new_url.startswith("https://") or new_url.startswith("http://")):
+        return jsonify({"error": "Invalid URL"}), 400
+    GPU_SERVER_URL = new_url
+    return jsonify({"status": "ok", "gpu_server_url": GPU_SERVER_URL})
 
 def forward_to_gpu_tts(text, voice_id, fmt="opus"):
     import urllib.request, json
@@ -293,11 +310,16 @@ def api_tts():
         provider = req.get("provider", "capcut")
         dialogue_role = req.get("dialogue_role") or "narration"
 
-        # ĐIỀU HƯỚNG VIENEU TURBO VÀ VOICESTUDIO SANG CLOUD GPU:
-        if provider == "vieneu" or str(voice_id).startswith("vieneu_") or provider == "voicestudio" or str(voice_id).startswith("voicestudio_"):
-            gpu_audio = forward_to_gpu_tts(text, voice_id, fmt="opus")
+        # ĐIỀU HƯỚNG VIENEU TURBO SANG CLOUD GPU (Colab):
+        is_vieneu = (provider == "vieneu" or str(voice_id).startswith("vieneu_"))
+        if is_vieneu:
+            req_fmt = (req.get("format") or request.args.get("format") or "opus").lower()
+            gpu_fmt = "mp3" if req_fmt == "mp3" else "opus"
+            gpu_audio = forward_to_gpu_tts(text, voice_id, fmt=gpu_fmt)
             if gpu_audio:
-                return Response(gpu_audio, mimetype="audio/ogg; codecs=opus")
+                mime = "audio/mpeg" if gpu_fmt == "mp3" else "audio/ogg; codecs=opus"
+                return Response(gpu_audio, mimetype=mime)
+            return jsonify({"error": "Server VieNeu Colab chưa kết nối hoặc đã tắt"}), 503
 
         # XỬ LÝ ĐẶC TRỊ VOICESTUDIO: Chuẩn hóa ngữ âm chống đọc lơ lớ
         is_voicestudio = (provider == "voicestudio" or str(voice_id).startswith("voicestudio_"))
@@ -346,6 +368,119 @@ def get_offline_voice_demo(voice_id):
         return send_file(io.BytesIO(raw_mp3), mimetype="audio/mpeg")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/test-vieneu-page", methods=["GET"])
+def test_vieneu_page():
+    html = """<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nghe thử 1 trang truyện - VieNeu V3 Turbo</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 16px; }
+  .wrap { max-width: 680px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+  h1 { font-size: 1.15rem; color: #38bdf8; margin: 0 0 12px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+  select, button { padding: 10px 12px; border-radius: 10px; border: 1px solid #334155; font-size: 0.92rem; }
+  select { flex: 1; min-width: 210px; background: #0f172a; color: #f8fafc; }
+  button { background: #0284c7; color: #fff; font-weight: 700; cursor: pointer; border: none; }
+  button.stop { background: #dc2626; }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .status { font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; min-height: 20px; }
+  .para { padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; line-height: 1.65; background: rgba(15,23,42,0.55); cursor: pointer; border: 1px solid transparent; }
+  .para.active { background: rgba(56,189,248,0.16); border-color: #38bdf8; color: #fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚀 Nghe Thử 1 Trang Truyện — VieNeu V3 Turbo (Colab)</h1>
+  <div class="controls">
+    <select id="voiceSel">
+      <option value="vieneu_trucly">Trúc Ly (Nữ Trong Trẻo)</option>
+      <option value="vieneu_myduyen">Mỹ Duyên (Nữ Ngọt Ngào)</option>
+      <option value="vieneu_maianh">Mai Anh (Nữ Đêm Khuya)</option>
+      <option value="vieneu_thuydung">Thùy Dung (Nữ Miền Nam)</option>
+      <option value="vieneu_thientamduc">Thiền Tâm Đức (Nam Dẫn Truyện)</option>
+      <option value="vieneu_haidang">Hải Đăng (Nam Trầm Ấm)</option>
+      <option value="vieneu_thienminh">Thiện Minh (Nam Tự Nhiên)</option>
+      <option value="vieneu_quangson">Quang Sơn (Nam Điềm Đạm)</option>
+      <option value="vieneu_ductri">Đức Trí (Nam Trí Tuệ)</option>
+      <option value="vieneu_xuanvinh">Xuân Vĩnh (Nam Dõng Dạc)</option>
+    </select>
+    <button id="btnPlay" onclick="playFrom(0)">▶ Nghe cả trang</button>
+    <button class="stop" onclick="stopPlay()">■ Dừng</button>
+  </div>
+  <div id="status" class="status">Chạm vào một đoạn hoặc bấm "Nghe cả trang" để phát trực tiếp từ Colab VieNeu.</div>
+  <div id="story">
+    <div class="para" onclick="playFrom(0)">Đêm cuối thu, cơn gió lạnh thổi qua hiên trúc khiến ngọn đèn dầu trên bàn đá khẽ rung rinh, hắt bóng xuống trang sách cũ đang mở dở.</div>
+    <div class="para" onclick="playFrom(1)">Tiễn Vô Dụng đặt chén trà xuống, lắc đầu nói: "Nếu chuyện này dễ giải quyết như vậy, thì bao năm qua tông môn đã chẳng phải tốn nhiều tâm sức đến thế."</div>
+    <div class="para" onclick="playFrom(2)">Ngoài sân, sương mù bắt đầu giăng kín lối mòn dẫn lên đỉnh núi. Một bóng áo xanh lặng lẽ bước vào, tay cầm chiếc lệnh bài bằng ngọc cổ đã sứt một góc.</div>
+    <div class="para" onclick="playFrom(3)">"Sư huynh, phía đông vừa truyền tin về. Người của Huyết Ảnh Lâu đã xuất hiện ở chân núi rồi!"</div>
+    <div class="para" onclick="playFrom(4)">Nghe vậy, Tiễn Vô Dụng chỉ nhếch môi cười nhạt, ánh mắt bình thản đến lạ thường: "Không sao, cứ để bọn chúng lên đây. Ta cũng muốn xem thử lần này kẻ nào dám tự tìm đường chết."</div>
+  </div>
+  <audio id="player" controls style="width:100%; margin-top:12px;"></audio>
+</div>
+<script>
+const paras = Array.from(document.querySelectorAll('.para'));
+const player = document.getElementById('player');
+const statusEl = document.getElementById('status');
+let currentIdx = -1;
+let sessionId = 0;
+
+function stopPlay() {
+  sessionId++;
+  currentIdx = -1;
+  player.pause();
+  player.removeAttribute('src');
+  paras.forEach(p => p.classList.remove('active'));
+  statusEl.textContent = 'Đã dừng phát.';
+}
+
+async function fetchParaAudio(text, voiceId) {
+  const res = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice_id: voiceId, provider: 'vieneu', format: 'mp3' })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error('HTTP ' + res.status + ': ' + errText);
+  }
+  return await res.blob();
+}
+
+async function playFrom(idx) {
+  const mySession = ++sessionId;
+  if (idx < 0 || idx >= paras.length) {
+    stopPlay();
+    statusEl.textContent = '✅ Đã đọc xong trang truyện mẫu.';
+    return;
+  }
+  currentIdx = idx;
+  paras.forEach((p, i) => p.classList.toggle('active', i === idx));
+  const voiceId = document.getElementById('voiceSel').value;
+  statusEl.textContent = '⏳ Đang tổng hợp đoạn ' + (idx + 1) + '/' + paras.length + ' từ Google Colab...';
+  try {
+    const blob = await fetchParaAudio(paras[idx].textContent.trim(), voiceId);
+    if (mySession !== sessionId) return;
+    const url = URL.createObjectURL(blob);
+    player.src = url;
+    player.onended = () => {
+      URL.revokeObjectURL(url);
+      if (mySession === sessionId) playFrom(idx + 1);
+    };
+    statusEl.textContent = '🔊 Đang phát đoạn ' + (idx + 1) + '/' + paras.length + ' (' + voiceId + ')';
+    await player.play();
+  } catch (e) {
+    statusEl.textContent = '❌ Lỗi: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>"""
+    return Response(html, mimetype="text/html; charset=utf-8")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
