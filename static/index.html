@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 425 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.236' -->
+<!-- CURRENT_APP_BUILD = 426 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.237' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.236';
-    var CURRENT_APP_BUILD = 425;
+    var CURRENT_APP_VERSION = 'v1.6.237';
+    var CURRENT_APP_BUILD = 426;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -11255,8 +11255,8 @@ body.zen-mode #nrFabAdd {
       localStorage.setItem('reader_voice_narrator', val);
       localStorage.setItem('reader_voice_single', val);
 
-      // ÉP 100% SINGLE-VOICE NẾU CHỌN VOICESTUDIO HOẶC VIENEU:
-      const isForceSingle = String(val).startsWith('voicestudio_') || String(val).startsWith('vieneu_') || (typeof provider !== 'undefined' && (provider === 'voicestudio' || provider === 'vieneu'));
+      // ÉP 100% SINGLE-VOICE NẾU CHỌN VOICESTUDIO (VieNeu V3 Turbo hỗ trợ phân vai nhiều giọng):
+      const isForceSingle = String(val).startsWith('voicestudio_') || (typeof provider !== 'undefined' && provider === 'voicestudio');
       if (isForceSingle) {
         localStorage.setItem('reader_voice_mode', 'single');
         localStorage.setItem('reader_multi_voice', '0');
@@ -11270,11 +11270,26 @@ body.zen-mode #nrFabAdd {
       // Tự động gán cặp giọng thoại phù hợp với nhóm giọng vừa chọn
       const isValFemale = isKnownFemaleVoice(val);
       const isValMale = isKnownMaleVoice(val);
+      const isValVieNeu = String(val).startsWith('vieneu_');
       const isValOffline = String(val).startsWith('offline_');
       const isValKokoro = String(val).includes('kokoro');
       const isValVits = isValOffline && (val.includes('banmai') || val.includes('manhdung') || val.includes('calmwoman') || val.includes('ngochuyennew') || val.includes('deepman'));
 
-      if (isValFemale) {
+      if (isValVieNeu) {
+        const curMale = localStorage.getItem('reader_voice_male') || '';
+        const curFemale = localStorage.getItem('reader_voice_female') || '';
+        if (isValFemale) {
+          localStorage.setItem('reader_voice_female', val);
+          if (!curMale.startsWith('vieneu_') || isKnownFemaleVoice(curMale)) {
+            localStorage.setItem('reader_voice_male', 'vieneu_haidang');
+          }
+        } else {
+          localStorage.setItem('reader_voice_male', val);
+          if (!curFemale.startsWith('vieneu_') || isKnownMaleVoice(curFemale)) {
+            localStorage.setItem('reader_voice_female', 'vieneu_trucly');
+          }
+        }
+      } else if (isValFemale) {
         localStorage.setItem('reader_voice_female', val);
         if (!localStorage.getItem('reader_voice_male') || isKnownFemaleVoice(localStorage.getItem('reader_voice_male'))) {
           localStorage.setItem('reader_voice_male', isValVits ? 'offline_manhdung' : (isValKokoro ? 'offline_vieneu:2' : (isValOffline ? 'offline_vieneu:2' : 'BV075_streaming')));
@@ -14412,6 +14427,7 @@ body.zen-mode #nrFabAdd {
         // VieNeu Nữ: 0 (Ngọc Lan), 1 (Minh Anh), 3 (Thu Hà), 4 (Yến Nhi), 9 (Bà lão), 11 (Bé gái), 12 (Bích Giao), 13 (Kim Tuyền), 14 (Kim Cúc)
         if ([0, 1, 3, 4, 9, 11, 12, 13, 14].includes(sid)) return true;
       }
+      if (['vieneu_trucly', 'vieneu_myduyen', 'vieneu_maianh', 'vieneu_thuydung'].includes(s)) return true;
       return false;
     }
 
@@ -14429,6 +14445,7 @@ body.zen-mode #nrFabAdd {
         // VieNeu Nam: 2 (Quang Huy), 5 (Hải Đăng), 6 (Thái Sơn), 7 (Adam), 8 (Ông lão), 10 (Bé trai)
         if ([2, 5, 6, 7, 8, 10].includes(sid)) return true;
       }
+      if (['vieneu_thientamduc', 'vieneu_haidang', 'vieneu_thienminh', 'vieneu_quangson', 'vieneu_ductri', 'vieneu_xuanvinh'].includes(s)) return true;
       return false;
     }
 
@@ -14437,11 +14454,12 @@ body.zen-mode #nrFabAdd {
       if (!mainSelect) return;
 
       const currentSavedVoice = localStorage.getItem('reader_saved_voice') || 'offline_vieneu:0';
+      const isCurVieNeu = currentSavedVoice.startsWith('vieneu_');
       const isCurOffline = currentSavedVoice.startsWith('offline_');
       const isCurKokoro = currentSavedVoice.includes('kokoro');
       const isCurVits = isCurOffline && (currentSavedVoice.includes('banmai') || currentSavedVoice.includes('manhdung') || currentSavedVoice.includes('calmwoman') || currentSavedVoice.includes('ngochuyennew') || currentSavedVoice.includes('deepman'));
-      const defaultMale = isCurOffline ? (isCurVits ? 'offline_manhdung' : (isCurKokoro ? 'offline_vieneu:2' : 'offline_vieneu:2')) : 'BV075_streaming';
-      const defaultFemale = isCurOffline ? (isCurVits ? 'offline_banmai' : (isCurKokoro ? 'offline_vieneu:1' : 'offline_vieneu:1')) : 'multi_female_richgirl_uranus_bigtts';
+      const defaultMale = isCurVieNeu ? 'vieneu_haidang' : (isCurOffline ? (isCurVits ? 'offline_manhdung' : (isCurKokoro ? 'offline_vieneu:2' : 'offline_vieneu:2')) : 'BV075_streaming');
+      const defaultFemale = isCurVieNeu ? 'vieneu_trucly' : (isCurOffline ? (isCurVits ? 'offline_banmai' : (isCurKokoro ? 'offline_vieneu:1' : 'offline_vieneu:1')) : 'multi_female_richgirl_uranus_bigtts');
 
       const targetSelects = [
         { id: 'selectVoiceNarrator', key: 'reader_voice_narrator', def: currentSavedVoice },
@@ -14592,8 +14610,8 @@ body.zen-mode #nrFabAdd {
 
     function getPairedMultiVoice(baseVoiceId, provider, targetGender, crowdRole = '', customVoiceId = '') {
       const mode = getVoiceMode();
-      // ÉP TUYỆT ĐỐI 100% ĐỌC 1 GIỌNG CHO VOICESTUDIO & VIENEU (KHÔNG PHÂN VAI):
-      const isSingleVoiceLocked = (mode === 'single' || provider === 'voicestudio' || String(baseVoiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(baseVoiceId).startsWith('vieneu_'));
+      // ÉP TUYỆT ĐỐI 100% ĐỌC 1 GIỌNG CHO VOICESTUDIO (VieNeu V3 Turbo hỗ trợ phân vai nhiều giọng):
+      const isSingleVoiceLocked = (mode === 'single' || provider === 'voicestudio' || String(baseVoiceId).startsWith('voicestudio_'));
       if (isSingleVoiceLocked) {
         return baseVoiceId;
       }
@@ -14608,27 +14626,33 @@ body.zen-mode #nrFabAdd {
       // 1. ƯU TIÊN TUYỆT ĐỐI: Giọng người dùng đã chủ động chọn riêng trong cài đặt Mode 1
       const userMale = localStorage.getItem('reader_voice_male');
       const userFemale = localStorage.getItem('reader_voice_female');
+      const vIdCheck = (baseVoiceId || '').toLowerCase();
+      const isBaseVieNeu = (provider === 'vieneu' || vIdCheck.startsWith('vieneu_'));
 
       // V1.6.178 SANITY GUARD: Tuyệt đối không cho phép giọng Nam nhận nhầm ID giọng Nữ do cache cũ
       if (gender === 'male') {
         if (userMale && userMale.trim() && !isKnownFemaleVoice(userMale.trim())) {
-          return userMale.trim();
+          if (!isBaseVieNeu || userMale.trim().startsWith('vieneu_')) return userMale.trim();
         }
         // Nếu userMale bị trống hoặc vô tình là giọng nữ, tự động gán giọng Nam chuẩn theo engine đang dùng
-        const vIdCheck = (baseVoiceId || '').toLowerCase();
         if (provider === 'voicestudio' || vIdCheck.startsWith('voicestudio_')) {
           return 'voicestudio_onyx'; // Nam VoiceStudio: The Mate
+        }
+        if (isBaseVieNeu) {
+          return 'vieneu_haidang';
         }
         const isOfflineCheck = (provider === 'offline' || provider === 'native' || vIdCheck.startsWith('offline_') || vIdCheck === 'android_native' || vIdCheck.startsWith('native:'));
         return isOfflineCheck ? (vIdCheck.includes('kokoro') ? 'offline_vieneu:2' : 'offline_vieneu:2') : 'BV075_streaming';
       }
       if (gender === 'female') {
         if (userFemale && userFemale.trim() && !isKnownMaleVoice(userFemale.trim())) {
-          return userFemale.trim();
+          if (!isBaseVieNeu || userFemale.trim().startsWith('vieneu_')) return userFemale.trim();
         }
-        const vIdCheck = (baseVoiceId || '').toLowerCase();
         if (provider === 'voicestudio' || vIdCheck.startsWith('voicestudio_')) {
           return 'voicestudio_shimmer'; // Nu VoiceStudio: The Neighbor
+        }
+        if (isBaseVieNeu) {
+          return 'vieneu_trucly';
         }
         const isOfflineCheck = (provider === 'offline' || provider === 'native' || vIdCheck.startsWith('offline_') || vIdCheck === 'android_native' || vIdCheck.startsWith('native:'));
         return isOfflineCheck ? (vIdCheck.includes('kokoro') ? 'offline_vieneu:1' : 'offline_vieneu:1') : 'multi_female_richgirl_uranus_bigtts';
@@ -15101,8 +15125,8 @@ body.zen-mode #nrFabAdd {
       spokenText = spokenText.replace(/ {2,}/g, ' ').trim();
 
       let effectiveVoiceId = voiceId;
-      const isVoiceStudioOrVieNeuPrefetch = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
-      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeuPrefetch) {
+      const isVoiceStudioOnlyPrefetch = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_'));
+      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOnlyPrefetch) {
         if (attr.isDialogue) {
           effectiveVoiceId = getPairedMultiVoice(voiceId, provider, attr.gender, '', attr.customVoiceId);
         } else {
@@ -15112,7 +15136,7 @@ body.zen-mode #nrFabAdd {
       } else {
         effectiveVoiceId = getSingleVoice() || voiceId;
       }
-      if (isVoiceStudioOrVieNeuPrefetch) {
+      if (isVoiceStudioOnlyPrefetch) {
         effectiveVoiceId = voiceId; // ÉP 100% GIỮ NGUYÊN GIỌNG ĐƯỢC CHỌN
       }
       const effectiveProvider = getProviderForVoiceId(effectiveVoiceId);
@@ -15342,8 +15366,8 @@ body.zen-mode #nrFabAdd {
         if (!text || isParagraphSkipped(text)) continue;
 
         let effVoice = voiceId;
-        const isVoiceStudioOrVieNeuCache = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
-        if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeuCache) {
+        const isVoiceStudioOnlyCache = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_'));
+        if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOnlyCache) {
           const nextS = (i + 1 < allSentences.length) ? allSentences[i + 1] : '';
           const prevS = (i > 0) ? allSentences[i - 1] : '';
           const attr = analyzeDialogueAttribution(text, nextS, prevS, i);
@@ -15351,7 +15375,7 @@ body.zen-mode #nrFabAdd {
         } else {
           effVoice = getSingleVoice() || voiceId;
         }
-        if (isVoiceStudioOrVieNeuCache) {
+        if (isVoiceStudioOnlyCache) {
           effVoice = voiceId;
         }
 
@@ -15847,8 +15871,8 @@ body.zen-mode #nrFabAdd {
 
       // 1. Phân vai đa giọng & Xác định cấu hình giọng (Offline vs Online)
       let effectiveVoiceId = voiceId;
-      const isVoiceStudioOrVieNeu = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_') || provider === 'vieneu' || String(voiceId).startsWith('vieneu_'));
-      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOrVieNeu) {
+      const isVoiceStudioOnly = (provider === 'voicestudio' || String(voiceId).startsWith('voicestudio_'));
+      if (isMultiVoice && getVoiceMode() !== 'single' && !isVoiceStudioOnly) {
         if (attr.isDialogue) {
           effectiveVoiceId = getPairedMultiVoice(voiceId, provider, attr.gender, attr.crowdRole, attr.customVoiceId);
         } else {
@@ -15857,8 +15881,8 @@ body.zen-mode #nrFabAdd {
       } else {
         effectiveVoiceId = getSingleVoice() || voiceId;
       }
-      if (isVoiceStudioOrVieNeu) {
-        effectiveVoiceId = voiceId; // ÉP 100% GIỮ NGUYÊN GIỌNG ĐƯỢC CHỌN CHO VOICESTUDIO VÀ VIENEU
+      if (isVoiceStudioOnly) {
+        effectiveVoiceId = voiceId; // ÉP 100% GIỮ NGUYÊN GIỌNG ĐƯỢC CHỌN CHO VOICESTUDIO
       }
       console.log(`[Voice Dispatch] S${idx+1}: isDialogue=${attr.isDialogue}, gender=${attr.gender}, speaker='${attr.speaker}', voice=${effectiveVoiceId}`);
       const effectiveProvider = getProviderForVoiceId(effectiveVoiceId);
@@ -18105,8 +18129,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.236';
-    CURRENT_APP_BUILD = 425;
+    CURRENT_APP_VERSION = 'v1.6.237';
+    CURRENT_APP_BUILD = 426;
 
     async function autoSilentOtaCheck() {
       try {

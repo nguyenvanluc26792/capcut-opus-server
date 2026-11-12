@@ -1,16 +1,16 @@
 {
-  "version": "v1.6.236",
-  "version_name": "v1.6.236",
-  "build": 425,
-  "version_code": 425,
-  "versionCode": 425,
+  "version": "v1.6.237",
+  "version_name": "v1.6.237",
+  "build": 426,
+  "version_code": 426,
+  "versionCode": 426,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "bae1bda52a3de698b0ab27a808bbb0638b8bbfc0468abec8370eb5036cf274ce",
-  "size": 874787,
+  "sha256": "0b2de12e234d04313f8c9d6f7f57b4cd22c729d0b092a7b8272d64180a457bdd",
+  "size": 875909,
   "force": true,
   "success": true,
   "changelog": [
-    "Sua loi dong 1 CURRENT_APP_BUILD khien OTA bi xoa ve ban cu sau khi cai dat"
+    "Mo khoa Phan vai nhieu giong (Multi-Voice) cho VieNeu V3 Turbo Offline"
   ]
 }
