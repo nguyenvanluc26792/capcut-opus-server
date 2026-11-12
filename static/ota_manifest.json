@@ -1,16 +1,16 @@
 {
-  "version": "v1.6.238",
-  "version_name": "v1.6.238",
-  "build": 427,
-  "version_code": 427,
-  "versionCode": 427,
+  "version": "v1.6.239",
+  "version_name": "v1.6.239",
+  "build": 428,
+  "version_code": 428,
+  "versionCode": 428,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "ffe93ab61a79fd5f3020098f6457b2e66a977cecdf23a09673f23024fe98bb8a",
-  "size": 877796,
+  "sha256": "50d3bfea383b1db669474142d7f9762650aded6a59c83b2d2905e896fa12c53f",
+  "size": 879410,
   "force": true,
   "success": true,
   "changelog": [
-    "Them nut Phat song song cung app khac (khong tu dung khi app khac phat am thanh)"
+    "Toi uu prefetch tuan tu va cua so truot giam khuc khac khi chuyen doan"
   ]
 }

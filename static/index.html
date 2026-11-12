@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 427 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.238' -->
+<!-- CURRENT_APP_BUILD = 428 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.239' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5764,8 +5764,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.238';
-    var CURRENT_APP_BUILD = 427;
+    var CURRENT_APP_VERSION = 'v1.6.239';
+    var CURRENT_APP_BUILD = 428;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -15269,7 +15269,8 @@ body.zen-mode #nrFabAdd {
                 if (prefetchAbort.signal.aborted) return null;
                 try {
                   const ctrl = new AbortController();
-                  const t = setTimeout(() => ctrl.abort(), 25000);
+                  const remoteTimeoutMs = (isVieneuPrefetch && window.__vieneuFullReady) ? 4500 : 25000;
+                  const t = setTimeout(() => ctrl.abort(), remoteTimeoutMs);
                   const res = await fetch(srv + '/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -15438,30 +15439,62 @@ body.zen-mode #nrFabAdd {
       const voiceId = getCurrentConfiguredVoiceId();
       const provider = getProviderForVoiceId(voiceId);
       const isOnlineVoice = (provider === 'vieneu' || provider === 'capcut' || String(voiceId).startsWith('vieneu_') || String(voiceId).startsWith('capcut_'));
-      const targetPrefetchCount = isOnlineVoice ? 3 : 2;
+      const isLocalSequentialCpu = (!isOnlineVoice || !navigator.onLine || !!window.__vieneuFullReady);
+      const targetPrefetchCount = 3;
 
-      const currentAhead = getBufferedAheadCount(startIdx);
-      if (currentAhead >= targetPrefetchCount) {
+      if (isBurstPrefetching) {
+        window._pendingPrefetchStartIdx = Math.max(window._pendingPrefetchStartIdx || 0, startIdx);
         return;
       }
-
-      if (isBurstPrefetching) return;
       isBurstPrefetching = true;
+      window._pendingPrefetchStartIdx = startIdx;
 
       try {
-        const tasks = [];
-        let queued = 0;
-        let scanIdx = startIdx + 1;
-        while (scanIdx < allSentences.length && (currentAhead + queued) < targetPrefetchCount && isPlaying) {
-          const sText = allSentences[scanIdx] ? allSentences[scanIdx].trim() : '';
-          if (sText && !isParagraphSkipped(sText)) {
-            tasks.push(prefetchSentenceAudio(currentChapterIndex, scanIdx));
-            queued++;
+        while (isPlaying) {
+          const baseIdx = Math.max(window._pendingPrefetchStartIdx || 0, currentParagraphIndex || 0);
+          window._pendingPrefetchStartIdx = -1;
+
+          const currentAhead = getBufferedAheadCount(baseIdx);
+          if (currentAhead < targetPrefetchCount) {
+            const toFetch = [];
+            let validAhead = 0;
+            let scanIdx = baseIdx + 1;
+            while (scanIdx < allSentences.length && validAhead < targetPrefetchCount && isPlaying) {
+              const sText = allSentences[scanIdx] ? allSentences[scanIdx].trim() : '';
+              if (sText && !isParagraphSkipped(sText)) {
+                validAhead++;
+                let alreadyCached = false;
+                const prefix = currentChapterIndex + '_' + scanIdx + '_';
+                for (const [k, v] of paragraphAudioCache.entries()) {
+                  if (k.startsWith(prefix) && v && v.size >= 300) {
+                    alreadyCached = true;
+                    break;
+                  }
+                }
+                if (!alreadyCached) {
+                  toFetch.push(scanIdx);
+                }
+              }
+              scanIdx++;
+            }
+
+            if (toFetch.length > 0) {
+              if (isLocalSequentialCpu) {
+                // Chạy tuần tự đúng thứ tự idx+1 -> idx+2 -> idx+3 để tránh câu sau chiếm khóa CPU trước câu kế tiếp
+                for (const sIdx of toFetch) {
+                  if (!isPlaying) break;
+                  await prefetchSentenceAudio(currentChapterIndex, sIdx);
+                  if (window._pendingPrefetchStartIdx >= 0) break;
+                }
+              } else {
+                await Promise.allSettled(toFetch.map(sIdx => prefetchSentenceAudio(currentChapterIndex, sIdx)));
+              }
+            }
           }
-          scanIdx++;
-        }
-        if (tasks.length > 0) {
-          await Promise.allSettled(tasks);
+
+          if ((window._pendingPrefetchStartIdx || -1) < 0) {
+            break;
+          }
         }
       } catch (err) {
         console.warn('[Burst Buffer Error]', err);
@@ -18164,8 +18197,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.238';
-    CURRENT_APP_BUILD = 427;
+    CURRENT_APP_VERSION = 'v1.6.239';
+    CURRENT_APP_BUILD = 428;
 
     async function autoSilentOtaCheck() {
       try {
