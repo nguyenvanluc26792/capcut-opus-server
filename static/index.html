@@ -1,5 +1,5 @@
 <!-- CURRENT_APP_BUILD = 420 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.232' -->
+<!-- CURRENT_APP_VERSION = 'v1.6.233' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.232';
-    var CURRENT_APP_BUILD = 421;
+    var CURRENT_APP_VERSION = 'v1.6.233';
+    var CURRENT_APP_BUILD = 422;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -16052,7 +16052,7 @@ body.zen-mode #nrFabAdd {
         setLoading(true);
         try {
           const abortCtrl = new AbortController();
-          const fetchTimeoutMs = 20000;
+          const fetchTimeoutMs = (isOfflineAiVoice || String(effectiveVoiceId).startsWith('vieneu_')) ? 45000 : 20000;
           const fetchTimer = setTimeout(() => abortCtrl.abort(), fetchTimeoutMs);
 
           // ÁP DỤNG 100% BỘ ĐIỀU KHIỂN NGỮ ĐIỆU DIỄN CẢM (PROSODY TEXT & DYNAMIC SPEED)
@@ -16191,33 +16191,40 @@ body.zen-mode #nrFabAdd {
               };
 
               try {
-                // Đua song song: Server nào (Cloudflare hay Render) trả về trước sẽ phát ngay!
-                blob = await new Promise(resolve => {
-                  let settledCount = 0;
-                  let won = false;
-                  const total = onlineServers.length;
-                  if (total === 0) return resolve(null);
-                  onlineServers.forEach(srv => {
-                    fetchOneOnlineServer(srv).then(b => {
-                      if (won) return;
-                      if (b && b.size >= 500) {
-                        won = true;
-                        resolve(b);
-                      } else {
+                // Nếu đang tắt mạng và chọn VieNeu -> bỏ qua đua server online, chạy thẳng Offline trên điện thoại
+                if (isVieneuOnline && !navigator.onLine) {
+                  blob = null;
+                } else {
+                  // Đua song song: Server nào (Cloudflare hay Render) trả về trước sẽ phát ngay!
+                  blob = await new Promise(resolve => {
+                    let settledCount = 0;
+                    let won = false;
+                    const total = onlineServers.length;
+                    if (total === 0) return resolve(null);
+                    onlineServers.forEach(srv => {
+                      fetchOneOnlineServer(srv).then(b => {
+                        if (won) return;
+                        if (b && b.size >= 500) {
+                          won = true;
+                          resolve(b);
+                        } else {
+                          settledCount++;
+                          if (settledCount >= total) resolve(null);
+                        }
+                      }).catch(() => {
                         settledCount++;
-                        if (settledCount >= total) resolve(null);
-                      }
-                    }).catch(() => {
-                      settledCount++;
-                      if (!won && settledCount >= total) resolve(null);
+                        if (!won && settledCount >= total) resolve(null);
+                      });
                     });
                   });
-                });
+                }
               } catch (_) {}
 
-              // Nếu là VieNeu và không có mạng / server online tắt -> dùng thẳng VieNeu V3 Full Offline trên điện thoại
-              if ((!blob || blob.size < 500) && isVieneuOnline && window.__vieneuFullReady) {
+              // Nếu là VieNeu và không có mạng / server online không trả về -> dùng thẳng VieNeu V3 Full Offline trên điện thoại
+              if ((!blob || blob.size < 500) && isVieneuOnline) {
                 try {
+                  const localOffCtrl = new AbortController();
+                  const localOffTimer = setTimeout(() => localOffCtrl.abort(), 45000);
                   const offRes = await fetch('/api/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -16227,8 +16234,9 @@ body.zen-mode #nrFabAdd {
                       provider: 'vieneu',
                       speed: dynamicSpeed
                     }),
-                    signal: abortCtrl.signal
+                    signal: localOffCtrl.signal
                   });
+                  clearTimeout(localOffTimer);
                   if (offRes.ok) {
                     const b = await offRes.blob();
                     if (b && b.size >= 500) blob = b;
@@ -18053,8 +18061,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.232';
-    CURRENT_APP_BUILD = 421;
+    CURRENT_APP_VERSION = 'v1.6.233';
+    CURRENT_APP_BUILD = 422;
 
     async function autoSilentOtaCheck() {
       try {

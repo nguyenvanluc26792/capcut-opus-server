@@ -1,18 +1,17 @@
 {
-  "version": "v1.6.232",
-  "version_name": "v1.6.232",
-  "build": 421,
-  "version_code": 421,
-  "versionCode": 421,
+  "version": "v1.6.233",
+  "version_name": "v1.6.233",
+  "build": 422,
+  "version_code": 422,
+  "versionCode": 422,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "d11bca3188d0693f35e4d146f5da81de0817e5ba29f98ca9aa4acef33d688eca",
-  "size": 891156,
+  "sha256": "a2c4d9e6972ed2b08bdf9d64753cca2f7a92f47f414792dd62c8d9dcf1104341",
+  "size": 891742,
   "force": true,
   "success": true,
   "changelog": [
-    "Hien thi day du 10 giong VieNeu Turbo AI trong danh sach chon giong",
-    "Them nut Tai Offline Full (147MB) ngay tren nhom VieNeu de chay offline truc tiep tren may",
-    "Giu nguyen giong VieNeu da chon khi khoi dong lai app"
+    "Sua loi tat mang khong chuyen sang VieNeu Full Offline tren dien thoai",
+    "Bo qua dua server online khi mat mang va tang timeout cho cau offline dau tien (45s)"
   ]
 }
