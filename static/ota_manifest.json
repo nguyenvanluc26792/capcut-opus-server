@@ -1,16 +1,16 @@
 {
-  "version": "v1.6.234",
-  "version_name": "v1.6.234",
-  "build": 423,
-  "version_code": 423,
-  "versionCode": 423,
+  "version": "v1.6.235",
+  "version_name": "v1.6.235",
+  "build": 424,
+  "version_code": 424,
+  "versionCode": 424,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "72ba9fec9d7a47d6923d0d2f42570ed79a6a59274390aa6c783aa4c5781a17e1",
-  "size": 873915,
+  "sha256": "bed1b00ff3c4e3172ed72b335d957c8513ab94f13dc4eda6a446b853820841d1",
+  "size": 874787,
   "force": true,
   "success": true,
   "changelog": [
-    "Bat doc goi dau (prefetch) cho VieNeu Offline khi mat mang de giam khoang dung giua cac cau"
+    "Nap san 2 cau dau ngay khi mo chuong de loai bo do tre khi bam Phat"
   ]
 }

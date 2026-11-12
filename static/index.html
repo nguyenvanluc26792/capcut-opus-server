@@ -1,5 +1,5 @@
 <!-- CURRENT_APP_BUILD = 420 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.234' -->
+<!-- CURRENT_APP_VERSION = 'v1.6.235' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.234';
-    var CURRENT_APP_BUILD = 423;
+    var CURRENT_APP_VERSION = 'v1.6.235';
+    var CURRENT_APP_BUILD = 424;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -12748,6 +12748,22 @@ body.zen-mode #nrFabAdd {
         updatePlayBtn();
         updateHonorMediaPillState();
         playParagraph(currentParagraphIndex);
+      } else if (typeof triggerPrefetchAhead === 'function' && allSentences && allSentences.length > 0) {
+        // Nạp trước ngầm 2 câu đầu ngay khi mở chương để bấm Phát là có tiếng ngay
+        setTimeout(() => {
+          try {
+            const vid = getCurrentConfiguredVoiceId();
+            if (!isPlaying && (String(vid).startsWith('vieneu_') || window.__vieneuFullReady)) {
+              const cur = Math.max(0, currentSentenceIndex || 0);
+              if (typeof prefetchParagraphAudio === 'function') {
+                prefetchParagraphAudio(currentChapterIndex, cur);
+                if (cur + 1 < allSentences.length) prefetchParagraphAudio(currentChapterIndex, cur + 1);
+              } else {
+                triggerPrefetchAhead(Math.max(-1, cur - 1), 2);
+              }
+            }
+          } catch (_) {}
+        }, 500);
       }
     }
 
@@ -18089,8 +18105,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.234';
-    CURRENT_APP_BUILD = 423;
+    CURRENT_APP_VERSION = 'v1.6.235';
+    CURRENT_APP_BUILD = 424;
 
     async function autoSilentOtaCheck() {
       try {
