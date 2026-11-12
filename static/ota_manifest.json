@@ -1,16 +1,16 @@
 {
-  "version": "v1.6.235",
-  "version_name": "v1.6.235",
-  "build": 424,
-  "version_code": 424,
-  "versionCode": 424,
+  "version": "v1.6.236",
+  "version_name": "v1.6.236",
+  "build": 425,
+  "version_code": 425,
+  "versionCode": 425,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "bed1b00ff3c4e3172ed72b335d957c8513ab94f13dc4eda6a446b853820841d1",
+  "sha256": "bae1bda52a3de698b0ab27a808bbb0638b8bbfc0468abec8370eb5036cf274ce",
   "size": 874787,
   "force": true,
   "success": true,
   "changelog": [
-    "Nap san 2 cau dau ngay khi mo chuong de loai bo do tre khi bam Phat"
+    "Sua loi dong 1 CURRENT_APP_BUILD khien OTA bi xoa ve ban cu sau khi cai dat"
   ]
 }
