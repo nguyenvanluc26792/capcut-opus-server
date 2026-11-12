@@ -1,18 +1,18 @@
 {
-  "version": "v1.6.231",
-  "version_name": "v1.6.231",
-  "build": 420,
-  "version_code": 420,
-  "versionCode": 420,
+  "version": "v1.6.232",
+  "version_name": "v1.6.232",
+  "build": 421,
+  "version_code": 421,
+  "versionCode": 421,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "4dab54daecad2721c067d1953e67d405873736162a8798eeb258d34377426194",
-  "size": 869131,
+  "sha256": "d11bca3188d0693f35e4d146f5da81de0817e5ba29f98ca9aa4acef33d688eca",
+  "size": 891156,
   "force": true,
   "success": true,
   "changelog": [
-    "🔒 KHÓA CHẶT SINGLE-VOICE: Ép 100% chỉ đọc đúng 1 giọng duy nhất cho VoiceStudio và VieNeu Turbo!",
-    "🚫 Vô hiệu hóa triệt để cơ chế tự đổi sang giọng nam/nữ của CapCut khi đang dùng VoiceStudio",
-    "⚡ Tự động chuyển app sang Mode 2 (1 Voice duy nhất) ngay khi bạn chọn bất kỳ giọng VoiceStudio hoặc VieNeu nào"
+    "Hien thi day du 10 giong VieNeu Turbo AI trong danh sach chon giong",
+    "Them nut Tai Offline Full (147MB) ngay tren nhom VieNeu de chay offline truc tiep tren may",
+    "Giu nguyen giong VieNeu da chon khi khoi dong lai app"
   ]
 }

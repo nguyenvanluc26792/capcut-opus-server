@@ -1,5 +1,5 @@
 <!-- CURRENT_APP_BUILD = 420 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.231' -->
+<!-- CURRENT_APP_VERSION = 'v1.6.232' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5754,17 +5754,15 @@ body.zen-mode #nrFabAdd {
   <audio id="audioPlayer" style="display: none;"></audio>
 
   <script>
-    var DEFAULT_OTA_3G_URL = 'https://specially-frequency-regression-called.trycloudflare.com';
+    var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.231';
-    var CURRENT_APP_BUILD = 420;
-        // =====================================================================
-    // MIGRATION TỰ ĐỘNG: Làm sạch cấu hình VieNeu cũ, chuyển thẳng sang CapCut AI
-    // =====================================================================
+    var CURRENT_APP_VERSION = 'v1.6.232';
+    var CURRENT_APP_BUILD = 421;
+    // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
-      if (!curSaved || curSaved.includes('vieneu') || curSaved === 'android_native' || curSaved.startsWith('native:')) {
+      if (!curSaved || curSaved === 'android_native' || curSaved.startsWith('native:')) {
         localStorage.setItem('reader_saved_voice', 'vi_female_huong');
         localStorage.setItem('reader_voice_narrator', 'vi_female_huong');
         localStorage.setItem('reader_voice_male', 'BV075_streaming');
@@ -5772,15 +5770,15 @@ body.zen-mode #nrFabAdd {
         localStorage.setItem('reader_voice_single', 'vi_female_huong');
       }
       const curMale = localStorage.getItem('reader_voice_male') || '';
-      if (!curMale || curMale.includes('vieneu') || curMale === 'android_native') {
+      if (!curMale || curMale === 'android_native') {
         localStorage.setItem('reader_voice_male', 'BV075_streaming');
       }
       const curFemale = localStorage.getItem('reader_voice_female') || '';
-      if (!curFemale || curFemale.includes('vieneu') || curFemale === 'android_native') {
+      if (!curFemale || curFemale === 'android_native') {
         localStorage.setItem('reader_voice_female', 'multi_female_richgirl_uranus_bigtts');
       }
       const curNarrator = localStorage.getItem('reader_voice_narrator') || '';
-      if (!curNarrator || curNarrator.includes('vieneu') || curNarrator === 'android_native') {
+      if (!curNarrator || curNarrator === 'android_native') {
         localStorage.setItem('reader_voice_narrator', 'vi_female_huong');
       }
     } catch (_) {}
@@ -11543,6 +11541,46 @@ body.zen-mode #nrFabAdd {
       }
     }
 
+    window.__vieneuFullReady = false;
+    async function refreshVieNeuFullStatus() {
+      try {
+        const r = await fetch('/api/offline_voices/vieneu_full/status');
+        if (r.ok) {
+          const j = await r.json();
+          const prev = window.__vieneuFullReady;
+          window.__vieneuFullReady = !!j.available;
+          if (prev !== window.__vieneuFullReady) renderCustomVoicePickerList();
+        }
+      } catch (_) {}
+    }
+    setTimeout(refreshVieNeuFullStatus, 800);
+
+    async function downloadVieNeuFullOffline(btn) {
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tải 147MB...'; }
+      const sources = [
+        'https://nurses-transform-constructed-reach.trycloudflare.com',
+        'http://192.168.1.205:5000'
+      ];
+      let ok = false;
+      for (const baseUrl of sources) {
+        try {
+          const r = await fetch('/api/offline_voices/vieneu_full/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base_url: baseUrl })
+          });
+          const j = await r.json();
+          if (r.ok && j.available) { ok = true; break; }
+        } catch (_) {}
+      }
+      window.__vieneuFullReady = ok;
+      renderCustomVoicePickerList();
+      if (!ok && btn) {
+        btn.disabled = false;
+        btn.textContent = '⚠ Thử lại tải Full';
+      }
+    }
+
     function renderCustomVoicePickerList() {
       const container = document.getElementById('voicePickerList');
       const select = document.getElementById('voiceSelect');
@@ -11562,7 +11600,13 @@ body.zen-mode #nrFabAdd {
             const isModelDl = isKokoroGroup ? isOfflineVoiceDownloadedLocally('kokoro_vietnamese') : (isVitsGroup ? false : isOfflineVoiceDownloadedLocally('vieneu_multispeaker'));
 
             let headerAction = '';
-            if (isOfflineGroup && !isVitsGroup) {
+            if (grpLabel.includes('VieNeu')) {
+              if (window.__vieneuFullReady) {
+                headerAction = `<span style="font-size: 0.65rem; color: #4ade80; font-weight: 600; background: rgba(74,222,128,0.15); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(74,222,128,0.3);">✓ VieNeu Full Offline</span>`;
+              } else {
+                headerAction = `<button class="btn" onclick="event.stopPropagation(); downloadVieNeuFullOffline(this)" style="padding: 2px 8px; font-size: 0.68rem; border-radius: 4px; background: rgba(14,165,233,0.25); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.6); font-weight: 700; white-space: nowrap;" title="Tải VieNeu V3 Turbo Full Offline (147 MB)">⬇ Tải Offline Full (147MB)</button>`;
+              }
+            } else if (isOfflineGroup && !isVitsGroup) {
               const targetModelKey = isKokoroGroup ? 'kokoro_vietnamese' : 'vieneu_multispeaker';
               const targetModelName = isKokoroGroup ? 'Kokoro 24kHz (~287 MB)' : 'VieNeu (~60.5 MB)';
               if (!isModelDl) {
@@ -16171,6 +16215,26 @@ body.zen-mode #nrFabAdd {
                 });
               } catch (_) {}
 
+              // Nếu là VieNeu và không có mạng / server online tắt -> dùng thẳng VieNeu V3 Full Offline trên điện thoại
+              if ((!blob || blob.size < 500) && isVieneuOnline && window.__vieneuFullReady) {
+                try {
+                  const offRes = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                    body: JSON.stringify({
+                      text: safeProsodyText,
+                      voice_id: sendVoiceId,
+                      provider: 'vieneu',
+                      speed: dynamicSpeed
+                    }),
+                    signal: abortCtrl.signal
+                  });
+                  if (offRes.ok) {
+                    const b = await offRes.blob();
+                    if (b && b.size >= 500) blob = b;
+                  }
+                } catch (_) {}
+              }
               // TUYỆT ĐỐI KHÔNG GỌI /api/tts NỘI BỘ MÁY (LOCAL ANDROID) NẾU LÀ CAPCUT HOẶC VOICESTUDIO
               // để không bao giờ bị delay 10s hay bị Google TTS chen vào!
             } else {
@@ -17986,11 +18050,11 @@ body.zen-mode #nrFabAdd {
     // OTA UPDATE ENGINE (Hỗ trợ 3G / 4G / Wi-Fi toàn cầu & Kiểm tra phiên bản)
     // ==========================================
     // Cấu hình máy chủ cập nhật (đã khai báo ở đầu script)
-    DEFAULT_OTA_3G_URL = 'https://rid-shark-profiles-water.trycloudflare.com';
+    DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.229';
-    CURRENT_APP_BUILD = 418;
+    CURRENT_APP_VERSION = 'v1.6.232';
+    CURRENT_APP_BUILD = 421;
 
     async function autoSilentOtaCheck() {
       try {
