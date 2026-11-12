@@ -1,5 +1,5 @@
-<!-- CURRENT_APP_BUILD = 426 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.237' -->
+<!-- CURRENT_APP_BUILD = 427 -->
+<!-- CURRENT_APP_VERSION = 'v1.6.238' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5387,6 +5387,13 @@ body.zen-mode #nrFabAdd {
             </div>
             <span id="nrSfxStatus" class="nr-badge" style="background:#10b981; color:#fff; font-size:0.72rem; padding:3px 8px; border-radius:12px; font-weight:600;">ĐANG BẬT</span>
           </div>
+          <div class="nr-link-row" style="cursor:pointer;" onclick="toggleSimultaneousAudioSetting()">
+            <div style="display:flex; flex-direction:column; gap:2px; flex:1;">
+              <span style="font-weight:600;">🔀 Phát song song cùng app khác</span>
+              <span style="font-size:0.75rem; color:#888;">Không tự dừng khi YouTube, TikTok, Game... phát tiếng (dùng Web Audio)</span>
+            </div>
+            <span id="nrSimultaneousAudioStatus" class="nr-badge" style="background:#4b5563; color:#9ca3af; font-size:0.72rem; padding:3px 8px; border-radius:12px; font-weight:600;">ĐÃ TẮT</span>
+          </div>
           <div class="nr-link-row" onclick="openSystemTtsSettings()">
             <span>Mở Cài đặt Giọng nói Hệ thống (Text-to-speech) của điện thoại</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -5757,8 +5764,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.237';
-    var CURRENT_APP_BUILD = 426;
+    var CURRENT_APP_VERSION = 'v1.6.238';
+    var CURRENT_APP_BUILD = 427;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -5890,7 +5897,8 @@ body.zen-mode #nrFabAdd {
                                String(voiceIdForTimbre || '').startsWith('multi_') || 
                                String(voiceIdForTimbre || '').startsWith('vi_female') || 
                                String(voiceIdForTimbre || '').startsWith('voicestudio_');
-      const preferNativeAudio = (document.hidden || isCapCutOrOnline);
+      const allowSimultaneous = localStorage.getItem('reader_simultaneous_audio') === '1';
+      const preferNativeAudio = !allowSimultaneous && (document.hidden || isCapCutOrOnline);
 
       // KHI CHẠY NỀN (document.hidden) HOẶC PHÁT GIỌNG ONLINE CAPCUT / VOICESTUDIO:
       // Phát trực tiếp 100% qua thẻ <audio> HTML5 của hệ điều hành Android
@@ -6656,6 +6664,7 @@ body.zen-mode #nrFabAdd {
         if (typeof syncVoiceUIElements === 'function') syncVoiceUIElements();
         updateMultiVoiceUI();
         updateSfxUI();
+      if (typeof updateSimultaneousAudioUI === 'function') updateSimultaneousAudioUI();
       } catch (e) {}
     }
 
@@ -6731,6 +6740,32 @@ body.zen-mode #nrFabAdd {
       updateSfxUI();
       if (typeof showToast === 'function') {
         showToast(next ? '🔊 Đã bật Âm thanh điện ảnh SFX (Tiên Hiệp)' : 'Đã tắt Âm thanh điện ảnh SFX');
+      }
+    }
+
+    function updateSimultaneousAudioUI() {
+      const isEnabled = localStorage.getItem('reader_simultaneous_audio') === '1';
+      const badge = document.getElementById('nrSimultaneousAudioStatus');
+      if (badge) {
+        if (isEnabled) {
+          badge.textContent = 'ĐANG BẬT';
+          badge.style.background = '#10b981';
+          badge.style.color = '#fff';
+        } else {
+          badge.textContent = 'ĐÃ TẮT';
+          badge.style.background = '#4b5563';
+          badge.style.color = '#9ca3af';
+        }
+      }
+    }
+
+    function toggleSimultaneousAudioSetting() {
+      const current = localStorage.getItem('reader_simultaneous_audio') === '1';
+      const next = !current;
+      localStorage.setItem('reader_simultaneous_audio', next ? '1' : '0');
+      updateSimultaneousAudioUI();
+      if (typeof showToast === 'function') {
+        showToast(next ? '🔀 Đã bật Phát song song cùng app khác (Không tự dừng)' : 'Đã tắt Phát song song (Dừng khi app khác phát)');
       }
     }
 
@@ -18129,8 +18164,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.237';
-    CURRENT_APP_BUILD = 426;
+    CURRENT_APP_VERSION = 'v1.6.238';
+    CURRENT_APP_BUILD = 427;
 
     async function autoSilentOtaCheck() {
       try {

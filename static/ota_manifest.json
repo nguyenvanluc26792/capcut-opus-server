@@ -1,16 +1,16 @@
 {
-  "version": "v1.6.237",
-  "version_name": "v1.6.237",
-  "build": 426,
-  "version_code": 426,
-  "versionCode": 426,
+  "version": "v1.6.238",
+  "version_name": "v1.6.238",
+  "build": 427,
+  "version_code": 427,
+  "versionCode": 427,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "0b2de12e234d04313f8c9d6f7f57b4cd22c729d0b092a7b8272d64180a457bdd",
-  "size": 875909,
+  "sha256": "ffe93ab61a79fd5f3020098f6457b2e66a977cecdf23a09673f23024fe98bb8a",
+  "size": 877796,
   "force": true,
   "success": true,
   "changelog": [
-    "Mo khoa Phan vai nhieu giong (Multi-Voice) cho VieNeu V3 Turbo Offline"
+    "Them nut Phat song song cung app khac (khong tu dung khi app khac phat am thanh)"
   ]
 }
