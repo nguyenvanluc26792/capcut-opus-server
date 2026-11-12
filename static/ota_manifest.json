@@ -1,17 +1,16 @@
 {
-  "version": "v1.6.233",
-  "version_name": "v1.6.233",
-  "build": 422,
-  "version_code": 422,
-  "versionCode": 422,
+  "version": "v1.6.234",
+  "version_name": "v1.6.234",
+  "build": 423,
+  "version_code": 423,
+  "versionCode": 423,
   "url": "/static/index.html",
   "download_url": "/static/index.html",
-  "sha256": "5504f3897dd328506a681571cc13573b086d92fe39084bdedf58e80b785ca671",
-  "size": 872566,
+  "sha256": "72ba9fec9d7a47d6923d0d2f42570ed79a6a59274390aa6c783aa4c5781a17e1",
+  "size": 873915,
   "force": true,
   "success": true,
   "changelog": [
-    "Sua loi tat mang khong chuyen sang VieNeu Full Offline tren dien thoai",
-    "Bo qua dua server online khi mat mang va tang timeout cho cau offline dau tien (45s)"
+    "Bat doc goi dau (prefetch) cho VieNeu Offline khi mat mang de giam khoang dung giua cac cau"
   ]
 }

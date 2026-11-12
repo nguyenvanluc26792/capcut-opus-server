@@ -1,5 +1,5 @@
 <!-- CURRENT_APP_BUILD = 420 -->
-<!-- CURRENT_APP_VERSION = 'v1.6.233' -->
+<!-- CURRENT_APP_VERSION = 'v1.6.234' -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5757,8 +5757,8 @@ body.zen-mode #nrFabAdd {
     var DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     var CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     var DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    var CURRENT_APP_VERSION = 'v1.6.233';
-    var CURRENT_APP_BUILD = 422;
+    var CURRENT_APP_VERSION = 'v1.6.234';
+    var CURRENT_APP_BUILD = 423;
     // Cho phép giữ lại giọng VieNeu đã chọn khi khởi động lại app
     try {
       const curSaved = localStorage.getItem('reader_saved_voice') || '';
@@ -15218,28 +15218,56 @@ body.zen-mode #nrFabAdd {
               };
 
               try {
-                blob = await new Promise(resolve => {
-                  let settled = 0;
-                  let won = false;
-                  const total = prefetchServers.length;
-                  if (total === 0) return resolve(null);
-                  prefetchServers.forEach(srv => {
-                    fetchOnePrefetch(srv).then(b => {
-                      if (won) return;
-                      if (b && b.size >= 500) {
-                        won = true;
-                        resolve(b);
-                      } else {
+                if (isVieneuPrefetch && !navigator.onLine) {
+                  blob = null;
+                } else {
+                  blob = await new Promise(resolve => {
+                    let settled = 0;
+                    let won = false;
+                    const total = prefetchServers.length;
+                    if (total === 0) return resolve(null);
+                    prefetchServers.forEach(srv => {
+                      fetchOnePrefetch(srv).then(b => {
+                        if (won) return;
+                        if (b && b.size >= 500) {
+                          won = true;
+                          resolve(b);
+                        } else {
+                          settled++;
+                          if (settled >= total) resolve(null);
+                        }
+                      }).catch(() => {
                         settled++;
-                        if (settled >= total) resolve(null);
-                      }
-                    }).catch(() => {
-                      settled++;
-                      if (!won && settled >= total) resolve(null);
+                        if (!won && settled >= total) resolve(null);
+                      });
                     });
                   });
-                });
+                }
               } catch (_) {}
+
+              // Đọc gối đầu (prefetch) câu tiếp theo ngay trên engine VieNeu Offline của điện thoại khi mất mạng
+              if ((!blob || blob.size < 500) && isVieneuPrefetch && !prefetchAbort.signal.aborted) {
+                try {
+                  const localPreCtrl = new AbortController();
+                  const localPreTimer = setTimeout(() => localPreCtrl.abort(), 45000);
+                  const offPreRes = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                    body: JSON.stringify({
+                      text: safePrefetchText,
+                      voice_id: sendVoiceId,
+                      provider: 'vieneu',
+                      speed: dynamicPrefetchSpeed
+                    }),
+                    signal: localPreCtrl.signal
+                  });
+                  clearTimeout(localPreTimer);
+                  if (offPreRes.ok) {
+                    const b = await offPreRes.blob();
+                    if (b && b.size >= 500) blob = b;
+                  }
+                } catch (_) {}
+              }
             }
           }
           if (blob && blob.size >= 300 && !prefetchAbort.signal.aborted) {
@@ -18061,8 +18089,8 @@ body.zen-mode #nrFabAdd {
     DEFAULT_OTA_3G_URL = 'https://nurses-transform-constructed-reach.trycloudflare.com';
     CAPCUT_ONLINE_SERVER_URL = 'https://capcut-opus-server.onrender.com';
     DEFAULT_OTA_WIFI_URL = 'http://192.168.1.205:5000';
-    CURRENT_APP_VERSION = 'v1.6.233';
-    CURRENT_APP_BUILD = 422;
+    CURRENT_APP_VERSION = 'v1.6.234';
+    CURRENT_APP_BUILD = 423;
 
     async function autoSilentOtaCheck() {
       try {
