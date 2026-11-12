@@ -16,4 +16,4 @@ COPY . .
 ENV PORT=5000
 EXPOSE 5000
 
-CMD ["sh", "-c", "gunicorn -w 2 -b 0.0.0.0:${PORT:-5000} app:app"]
+CMD ["sh", "-c", "gunicorn -w 2 --timeout 60 -b 0.0.0.0:${PORT:-5000} app:app"]

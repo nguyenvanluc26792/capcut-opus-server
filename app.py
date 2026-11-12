@@ -24,15 +24,30 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 
-GPU_SERVER_URL = os.environ.get("GPU_SERVER_URL", "https://effects-presents-fighters-collins.trycloudflare.com").rstrip("/")
+DEFAULT_GPU_SERVER_URL = os.environ.get("GPU_SERVER_URL", "https://nurses-transform-constructed-reach.trycloudflare.com").rstrip("/")
+GPU_URL_STATE_FILE = Path("/tmp/gpu_server_url.txt") if Path("/tmp").exists() else (Path(__file__).resolve().parent / "gpu_server_url.txt")
+
+def get_gpu_server_url():
+    try:
+        if GPU_URL_STATE_FILE.exists():
+            saved = GPU_URL_STATE_FILE.read_text(encoding="utf-8").strip().rstrip("/")
+            if saved.startswith(("http://", "https://")):
+                return saved
+    except Exception:
+        pass
+    return DEFAULT_GPU_SERVER_URL
+
+def set_gpu_server_url(new_url):
+    clean = str(new_url or "").strip().rstrip("/")
+    GPU_URL_STATE_FILE.write_text(clean, encoding="utf-8")
+    return clean
 
 @app.route("/api/gpu/status", methods=["GET"])
 def api_gpu_status():
-    return jsonify({"gpu_server_url": GPU_SERVER_URL})
+    return jsonify({"gpu_server_url": get_gpu_server_url()})
 
 @app.route("/api/gpu/register", methods=["POST"])
 def api_gpu_register():
-    global GPU_SERVER_URL
     data = request.get_json(force=True, silent=True) or {}
     new_url = str(data.get("url") or "").strip().rstrip("/")
     expected_token = os.environ.get("GPU_REGISTER_TOKEN", "").strip()
@@ -40,13 +55,13 @@ def api_gpu_register():
         return jsonify({"error": "Unauthorized"}), 403
     if not (new_url.startswith("https://") or new_url.startswith("http://")):
         return jsonify({"error": "Invalid URL"}), 400
-    GPU_SERVER_URL = new_url
-    return jsonify({"status": "ok", "gpu_server_url": GPU_SERVER_URL})
+    saved = set_gpu_server_url(new_url)
+    return jsonify({"status": "ok", "gpu_server_url": saved})
 
 def forward_to_gpu_tts(text, voice_id, fmt="opus"):
     import urllib.request, json
     clean_text = re.sub(r'[\s\u00A0—–-]+', ' ', text).strip()
-    url = f"{GPU_SERVER_URL}/v1/audio/speech"
+    url = f"{get_gpu_server_url()}/v1/audio/speech"
     clean_vid = str(voice_id).replace("vieneu_", "")
     payload = {
         "model": "vieneu-v3-turbo",
@@ -60,7 +75,7 @@ def forward_to_gpu_tts(text, voice_id, fmt="opus"):
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json", "User-Agent": "CapcutOpusProxy/1.0"}
         )
-        with urllib.request.urlopen(req, timeout=25) as resp:
+        with urllib.request.urlopen(req, timeout=50) as resp:
             data = resp.read()
             if len(data) > 300:
                 return data
